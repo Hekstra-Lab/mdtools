@@ -5,7 +5,7 @@ import numpy as np
 from math import floor
 from scipy.spatial.distance import cdist
 from itertools import product
-from ..prep import xray
+from .xray import sg_canonicalize, sg_sym_to_mat_list
 
 def _findMolecules(top):
     """
@@ -286,8 +286,8 @@ def buildUnitCell(modeller, spacegroup, a=0, b=0, c=0):
         Index of unit cell along the c-axis
     """
     # Get symmetry information
-    sg = xray.sg_canonicalize(spacegroup)
-    matrices = xray.sg_sym_to_mat_list(sg)
+    sg = sg_canonicalize(spacegroup)
+    matrices = sg_sym_to_mat_list(sg)
     basis = _getUnitCellBasis(modeller)
     
     # Determine unit cell center
