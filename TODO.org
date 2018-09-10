@@ -2,9 +2,10 @@ TODO List for mdtools
 Jack Greisman <greisman@g.harvard.edu>
 
 * Prep
-** TODO Refactor build_supercell.py
+** TODO Refactor supercell.py
    Code should provide a UnitCell and SuperCell class with useful subcommands
 
+** TODO Add documentation to supercell.py
    
 * Equilibration
 ** TODO Squeeze runs
