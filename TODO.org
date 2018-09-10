@@ -1,0 +1,15 @@
+TODO List for mdtools
+Jack Greisman <greisman@g.harvard.edu>
+
+* Prep
+** TODO Refactor build_supercell.py
+   Code should provide a UnitCell and SuperCell class with useful subcommands
+
+   
+* Equilibration
+** TODO Squeeze runs
+   Add squeeze.py to determine the proper number of waters to include
+   to maintain the desired unit cell dimensions
+
+
+
