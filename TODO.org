@@ -8,6 +8,10 @@ Jack Greisman <greisman@g.harvard.edu>
 ** TODO Add documentation to supercell.py
    
 * Equilibration
+** DONE Equilibration of solvated system
+   Add equilibrate.py with sample code for how to equilibrate a system in 
+   OpenMM
+
 ** TODO Squeeze runs
    Add squeeze.py to determine the proper number of waters to include
    to maintain the desired unit cell dimensions
