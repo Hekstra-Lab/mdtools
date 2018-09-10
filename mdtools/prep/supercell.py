@@ -5,7 +5,7 @@ import numpy as np
 from math import floor
 from scipy.spatial.distance import cdist
 from itertools import product
-import xray
+from ..prep import xray
 
 def _findMolecules(top):
     """
