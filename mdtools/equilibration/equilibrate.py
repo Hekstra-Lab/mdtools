@@ -21,7 +21,7 @@ def equilibrate(topology, positions, temperature=300.0*kelvin):
     """
 
     # Create System
-    ff = ForceField('amber99sbildn.xml', 'tip3p.xml')
+    ff = ForceField('amber14/protein.ff14SB.xml', 'tip3p.xml')
     trajtop = mdtraj.Topology.from_openmm(topology)
     system = ff.createSystem(topology, nonbondedMethod=PME, 
                              nonbondedCutoff=1.*nanometer, 
