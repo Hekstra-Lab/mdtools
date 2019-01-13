@@ -21,7 +21,7 @@ class SolvatedMDSystem(MDSystem):
     def __init__(self, topology, positions, forcefield):
         MDSystem.__init__(self, topology, positions, forcefield)
 
-        def addSolvent(self, **kwargs):
+    def addSolvent(self, **kwargs):
         """
         Add solvent to the system to fill a rectangular box.
 
