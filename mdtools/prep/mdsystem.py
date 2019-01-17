@@ -33,7 +33,7 @@ class MDSystem(Modeller):
             MDTraj Topology object representing the system
         """
         mdtrajtop = mdtraj.Topology.from_openmm(self.getTopology())
-        for r1, r2 in zip(self.topology.residues(), mdtrajtop.residues()):
+        for r1, r2 in zip(self.topology.residues(), mdtrajtop.residues):
             r2.resSeq = r1.id
         return mdtrajtop
 
