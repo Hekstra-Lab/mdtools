@@ -20,6 +20,23 @@ class MDSystem(Modeller):
         Modeller.__init__(self, topology, positions)
         self.forcefield = forcefield
 
+    def _toMDTrajTopology(self):
+        """
+        Returns a MDTraj Topology object from the OpenMM Topology of 
+        this system. Importantly, it also ensures that the resSeq
+        attribute is set. This is necessary to ensure that PDB-based
+        residue numbering is not lost.
+
+        Returns
+        -------
+        mdtrajtop : MDTraj.Topology
+            MDTraj Topology object representing the system
+        """
+        mdtrajtop = mdtraj.Topology.from_openmm(self.getTopology())
+        for r1, r2 in zip(self.topology.residues(), mdtrajtop.residues()):
+            r2.resSeq = r1.id
+        return mdtrajtop
+
     def findMolecules(self):
         """
         Identify molecules based on bonded subsets of atoms.
@@ -30,7 +47,7 @@ class MDSystem(Modeller):
             Each entry represents one molecule, and is the set of all 
             Atoms in that molecule
         """
-        mdtrajtop = mdtraj.Topology.from_openmm(self.getTopology())
+        mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.find_molecules()
 
     def select(self, selection):
@@ -43,6 +60,6 @@ class MDSystem(Modeller):
         indices : np.ndarray
             Array of the indices of atoms matching the selection
         """
-        mdtrajtop = mdtraj.Topology.from_openmm(self.getTopology())
+        mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
