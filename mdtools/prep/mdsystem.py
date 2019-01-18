@@ -34,7 +34,7 @@ class MDSystem(Modeller):
         """
         mdtrajtop = mdtraj.Topology.from_openmm(self.getTopology())
         for r1, r2 in zip(self.topology.residues(), mdtrajtop.residues):
-            r2.resSeq = r1.id
+            r2.resSeq = int(r1.id)
         return mdtrajtop
 
     def findMolecules(self):
