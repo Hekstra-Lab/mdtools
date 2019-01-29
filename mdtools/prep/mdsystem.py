@@ -63,3 +63,26 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
+    def buildSimulation(self, temperature=300ˆkelvin, ensemble="NPT"):
+        """
+        Build a simulation context from the system. The simulation is
+        then available as an attribute.
+        """
+        # Build system
+        system = self.forcefield.createSystem(self.topology, nonbondedMethod=PME, 
+                                              nonbondedCutoff=1.*nanometer, 
+                                              constraints=HBonds)
+
+        # Setup MD simulation
+        dt = 0.002*picoseconds
+        integrator = LangevinIntegrator(temperature, 1/picosecond, dt)
+
+        # Setup barostat for NPT ensemble
+        if ensemble == "NPT":
+            barostat   = MonteCarloBarostat(1.0*bar, temperature, 25)
+            system.addForce(barostat)
+
+        # Add simulation
+        self.simulation = Simulation(self.topology, system, integrator)
+        return self
+
