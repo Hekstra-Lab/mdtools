@@ -86,3 +86,11 @@ class MDSystem(Modeller):
         self.simulation = Simulation(self.topology, system, integrator)
         return self
 
+    def minimize(self):
+        """
+        Minimize the system using the simulation context. If a simulation
+        context has not been built, an attribute error is raised.
+        """
+        self.simulation.context.setPositions(self.positions)
+        self.simulation.minimizeEnergy()
+        return self
