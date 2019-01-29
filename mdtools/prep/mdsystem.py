@@ -63,7 +63,7 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
-    def buildSimulation(self, temperature=300ˆkelvin, ensemble="NPT"):
+    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT"):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
