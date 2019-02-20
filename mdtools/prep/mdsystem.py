@@ -85,6 +85,10 @@ class MDSystem(Modeller):
 
         # Add simulation
         self.simulation = Simulation(self.topology, system, integrator)
+
+        # Initialize particle positions
+        self.simulation.context.setPositions(self.positions)
+
         return self
 
     def minimize(self):
@@ -92,6 +96,5 @@ class MDSystem(Modeller):
         Minimize the system using the simulation context. If a simulation
         context has not been built, an attribute error is raised.
         """
-        self.simulation.context.setPositions(self.positions)
         self.simulation.minimizeEnergy()
         return self
