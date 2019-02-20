@@ -63,14 +63,15 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
-    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT"):
+    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT",
+                        nonbondedMethod=PME, nonbondedCutoff=1.*nanometer):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
         """
         # Build system
-        system = self.forcefield.createSystem(self.topology, nonbondedMethod=PME, 
-                                              nonbondedCutoff=1.*nanometer, 
+        system = self.forcefield.createSystem(self.topology, nonbondedMethod=nonbondedMethod, 
+                                              nonbondedCutoff=nonbondedCutoff, 
                                               constraints=HBonds)
 
         # Setup MD simulation
