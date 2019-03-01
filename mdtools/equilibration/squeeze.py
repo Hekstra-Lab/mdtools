@@ -17,6 +17,24 @@ def squeeze(mdsystem):
     in order to maintain desired periodic box vectors
     """
 
+    mdsystem.buildSimulation(ensemble="NPT", posre=True)
+    
+    # Short pre-equilibration run
+
+    # Drop checkpoint
+
+    #----------------------------------------------------------------------#
+    # LOOP until converged
+
+    # Load checkpoint
+    
+    # Equilibration run, tapering off position restraints
+
+    # Determine change in periodic box vectors
+
+    # Duplicate waters or delete waters
+    #----------------------------------------------------------------------#
+
     return
 
 def duplicateWater(mdsystem):
