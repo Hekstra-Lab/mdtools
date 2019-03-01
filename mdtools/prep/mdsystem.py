@@ -10,6 +10,7 @@ from simtk.unit import *
 from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
+import numpy as np
 
 class MDSystem(Modeller):
     """
@@ -88,7 +89,6 @@ class MDSystem(Modeller):
             force.addParticle(int(i), positions[i].value_in_unit(nanometers))
         system.addForce(force)
         
-        
         # Setup barostat for NPT ensemble
         if ensemble == "NPT":
             barostat   = MonteCarloBarostat(1.0*bar, temperature, 25)
@@ -109,3 +109,27 @@ class MDSystem(Modeller):
         """
         self.simulation.minimizeEnergy()
         return self
+
+    def _time2steps(self, time):
+        """
+        Compute the number of steps corresponding to a given chemical time
+        """
+        chemtime = time.in_units_of(picoseconds)
+        dt = self.simulation.integrator.getStepSize()
+        return int(np.ceil(chemtime / dt))
+        
+    def simulate(self, n):
+        """
+        Simulate the system for the given number of steps. If n is a 
+        simtk.Unit of time, the number of steps are chosen to simulate
+        for the indicated chemical time
+
+        Parameters
+        ----------
+        n : int or simtk.unit
+            Number of steps or chemical time of simulation
+        """
+        if isinstance(n, int):
+            self.simulation.step(n)
+        else:
+            self.simulation.step(self._time2steps(n))
