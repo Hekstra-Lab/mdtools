@@ -63,7 +63,7 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
-    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT",
+    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT", posre=False,
                         nonbondedMethod=PME, nonbondedCutoff=1.*nanometer):
         """
         Build a simulation context from the system. The simulation is
@@ -78,6 +78,17 @@ class MDSystem(Modeller):
         dt = 0.002*picoseconds
         integrator = LangevinIntegrator(temperature, 1/picosecond, dt)
 
+        # Add position restraints that can be tapered off during simulation
+        force = CustomExternalForce("k*((x-x0)^2+(y-y0)^2+(z-z0)^2)")
+        force.addGlobalParameter("k", 5.0*kilocalories_per_mole/angstroms**2)
+        force.addPerParticleParameter("x0")
+        force.addPerParticleParameter("y0")
+        force.addPerParticleParameter("z0")
+        for i in self.select("not water and not (element Na or element Cl) and not element H"):
+            force.addParticle(int(i), positions[i].value_in_unit(nanometers))
+        system.addForce(force)
+        
+        
         # Setup barostat for NPT ensemble
         if ensemble == "NPT":
             barostat   = MonteCarloBarostat(1.0*bar, temperature, 25)
