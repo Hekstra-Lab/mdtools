@@ -18,3 +18,25 @@ def squeeze(mdsystem):
     """
 
     return
+
+def duplicateWater(mdsystem):
+    """
+    Duplicate a random water
+    """
+    # Select waters
+    waters = mdsystem.select("water")
+    mdtrajtop    = mdtraj.Topology.from_openmm(mdsystem.topology)
+    mdtrajwaters = mdtrajtop.subset(waters)
+
+    # Select a random water to duplicate
+    residue      = mdtrajwaters.residue(np.random.randint(len(waters)/3))
+    atomindices  = [ a.index for a in residue.atoms ]
+    newtop    = mdtrajwaterssubset(atomindices)
+    newtop = newtop.to_openmm()
+    pos = np.array(mdsystem.positions.value_in_unit(nanometers))
+
+    # Jitter the position to avoid singularity and add to system
+    jitter = (0.5-np.random.rand(3))*0.1
+    mdsystem.add(newtop, (pos[atomindices] + jitter)*nanometers)
+
+    return
