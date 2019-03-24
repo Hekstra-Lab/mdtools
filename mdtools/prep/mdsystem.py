@@ -11,6 +11,7 @@ from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
 import numpy as np
+from mdtools.equilibration import equilibrate
 
 class MDSystem(Modeller):
     """
@@ -145,3 +146,23 @@ class MDSystem(Modeller):
         self.setPositions(state.getPositions())
 
         return self
+
+    def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
+        """
+        Minimizes and equilibrate an MDSystem object. If position restraints
+        are applied, it will taper the restraints over the course of the 
+        simulation. This method assumes that MDSystem.buildSimulation() has
+        already been called.
+
+        Parameters
+        ----------
+        mdsystem : MDSystem
+            MDSystem object to equilibrate
+        simtime : simtk.unit
+            Total simulation time to use for equilibration
+        temperature : OpenMM.unit.Quantity(unit=kelvin)
+            Temperature to use to initialize velocities
+        posre : bool
+            If True, position restraints have been applied to simulation object
+        """
+        return equilibrate.equilibrate(self, simtime, temperature, posre)
