@@ -156,8 +156,6 @@ class MDSystem(Modeller):
 
         Parameters
         ----------
-        mdsystem : MDSystem
-            MDSystem object to equilibrate
         simtime : simtk.unit
             Total simulation time to use for equilibration
         temperature : OpenMM.unit.Quantity(unit=kelvin)
