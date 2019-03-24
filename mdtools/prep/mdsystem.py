@@ -109,6 +109,11 @@ class MDSystem(Modeller):
         context has not been built, an attribute error is raised.
         """
         self.simulation.minimizeEnergy()
+
+        # Update positions
+        state = self.simulation.context.getState(getPositions=True)
+        self.setPositions(state.getPositions())
+
         return self
 
     def _time2steps(self, time):
@@ -134,3 +139,9 @@ class MDSystem(Modeller):
             self.simulation.step(n)
         else:
             self.simulation.step(self._time2steps(n))
+
+        # Update positions
+        state = self.simulation.context.getState(getPositions=True)
+        self.setPositions(state.getPositions())
+
+        return self
