@@ -17,6 +17,7 @@ from math import floor
 from scipy.spatial.distance import cdist
 from itertools import product
 from .xray import sg_canonicalize, sg_sym_to_mat_list
+from mdtools.equilibration import squeeze
 
 class LatticeMDSystem(MDSystem):
     """
@@ -302,3 +303,6 @@ class LatticeMDSystem(MDSystem):
             self.positions = unitcell.positions
         else:
             return unitcell
+
+    def squeeze(self):
+        return squeeze.squeeze(self)
