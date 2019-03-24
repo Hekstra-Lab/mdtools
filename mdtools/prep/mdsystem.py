@@ -107,9 +107,9 @@ class MDSystem(Modeller):
 
         # Add reporters
         if saveTrajectory:
-            simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval))
+            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval))
         if saveStateData:
-            simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+            self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
         
         return self
 
