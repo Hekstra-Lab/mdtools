@@ -34,8 +34,8 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
         for i in range(11):
             k = max((5.0 - (0.5*i)), 0)
             mdsystem.simulation.context.setParameter('k', k*kilocalories_per_mole/angstroms**2)
-            mdsystem.simulation.simulate(simtime/11)
+            mdsystem.simulate(simtime/11)
     else:
-        mdsystem.simulation.simulate(simtime)
+        mdsystem.simulate(simtime)
             
     return mdsystem
