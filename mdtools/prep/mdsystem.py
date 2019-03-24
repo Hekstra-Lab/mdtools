@@ -114,7 +114,8 @@ class MDSystem(Modeller):
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
         self.positions = state.getPositions()
-
+        self.topology.setPeriodicBoxVectors(state.getPeriodicBoxVectors())
+        
         return self
 
     def _time2steps(self, time):
@@ -144,7 +145,8 @@ class MDSystem(Modeller):
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
         self.positions = state.getPositions()
-
+        self.topology.setPeriodicBoxVectors(state.getPeriodicBoxVectors())
+        
         return self
 
     def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
