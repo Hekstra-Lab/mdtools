@@ -4,66 +4,41 @@ from simtk.unit import *
 import mdtraj
 from mdtraj.reporters import HDF5Reporter
 
-def equilibrate(topology, positions, temperature=300.0*kelvin):
+def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
     """
-    Equilibrate an MD system represented by the given topology object
-    and provided initial positions in an NPT ensemble
+    Minimizes and equilibrate an MDSystem object. If position restraints
+    are applied, it will taper the restraints over the course of the 
+    simulation. This method assumes that MDSystem.buildSimulation() has
+    already been called.
 
     Parameters
     ----------
-    topology : OpenMM.Topology
-        Topology object representing the system to simulate
-    positions : OpenMM.unit.Quantity([], unit=distance)
-        XYZ coordinates of each atom in topology to be used as initial 
-        positions
+    mdsystem : MDSystem
+        MDSystem object to equilibrate
+    simtime : simtk.unit
+        Total simulation time to use for equilibration
     temperature : OpenMM.unit.Quantity(unit=kelvin)
-        Temperature to use for simulation
+        Temperature to use to initialize velocities
+    posre : bool
+        If True, position restraints have been applied to simulation object
     """
-
-    # Create System
-    ff = ForceField('amber14/protein.ff14SB.xml', 'amber14/tip3p.xml')
-    trajtop = mdtraj.Topology.from_openmm(topology)
-    system = ff.createSystem(topology, nonbondedMethod=PME, 
-                             nonbondedCutoff=1.*nanometer, 
-                             constraints=HBonds)
-
-    # Add position restraints that can be tapered off during simulation
-    force = CustomExternalForce("k*((x-x0)^2+(y-y0)^2+(z-z0)^2)")
-    force.addGlobalParameter("k", 5.0*kilocalories_per_mole/angstroms**2)
-    force.addPerParticleParameter("x0")
-    force.addPerParticleParameter("y0")
-    force.addPerParticleParameter("z0")
-    for i in trajtop.select("not water and not (element Na or element Cl) and not element H"):
-        force.addParticle(int(i), positions[i].value_in_unit(nanometers))
-    system.addForce(force)
-
-    # Setup MD simulation in NPT ensemble
-    dt = 0.002*picoseconds
-    integrator = LangevinIntegrator(temperature, 1/picosecond, dt)
-    barostat   = MonteCarloBarostat(1.0*bar, temperature, 25)
-    system.addForce(barostat)
-    simulation = Simulation(topology, system, integrator)
-    simulation.context.setPositions(positions)
 
     # Get simulation platform
     platform = Platform.getName(simulation.context.getPlatform())
     print("Running simulation using {}".format(platform))
 
-    simulation.reporters.append(HDF5Reporter('equilibration.h5', 25000))
-    simulation.reporters.append(StateDataReporter('equilibration.log', 500, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
-    
-    # Run minimization
-    simulation.minimizeEnergy()
+    mdsystem.minimize()
 
-    # Equilibration while tapering off position restraints
-    simulation.context.setVelocitiesToTemperature(temperature)
-    for i in range(21):
-        k = (5.0 - (0.25*i))
-        simulation.context.setParameter('k', k*kilocalories_per_mole/angstroms**2)
-        simulation.step(25000)
+    # Initialize velocities
+    mdsystem.simulation.context.setVelocitiesToTemperature(temperature)
 
-    # Close reporters
-    for rep in simulation.reporters:
-        rep.close()
-        
-    return
+    # Taper restraints if they're applied
+    if posre:
+        for i in range(11):
+            k = max((5.0 - (0.5*i)), 0)
+            mdsystem.simulation.context.setParameter('k', k*kilocalories_per_mole/angstroms**2)
+            mdsystem.simulation.simulate(simtime/11)
+    else:
+        mdsystem.simulation.simulate(simtime)
+            
+    return mdsystem
