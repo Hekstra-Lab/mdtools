@@ -10,6 +10,7 @@ from simtk.unit import *
 from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
+from mdtraj.reporters import HDF5Reporter
 import numpy as np
 from mdtools.equilibration import equilibrate
 
@@ -66,7 +67,9 @@ class MDSystem(Modeller):
         return mdtrajtop.select(selection)
         
     def buildSimulation(self, temperature=300*kelvin, ensemble="NPT", posre=False,
-                        nonbondedMethod=PME, nonbondedCutoff=1.*nanometer):
+                        nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
+                        filePrefix="traj", saveTrajectory=False, trajInterval=500,
+                        saveStateData=False, stateDataInterval=250):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
@@ -93,7 +96,7 @@ class MDSystem(Modeller):
         
         # Setup barostat for NPT ensemble
         if ensemble == "NPT":
-            barostat   = MonteCarloBarostat(1.0*bar, temperature, 25)
+            barostat = MonteCarloBarostat(1.0*bar, temperature, 25)
             system.addForce(barostat)
 
         # Add simulation
@@ -102,6 +105,12 @@ class MDSystem(Modeller):
         # Initialize particle positions
         self.simulation.context.setPositions(self.positions)
 
+        # Add reporters
+        if saveTrajectory:
+            simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval))
+        if saveStateData:
+            simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+        
         return self
 
     def minimize(self):
