@@ -113,7 +113,7 @@ class MDSystem(Modeller):
 
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
-        self.setPositions(state.getPositions())
+        self.positions = state.getPositions()
 
         return self
 
@@ -143,7 +143,7 @@ class MDSystem(Modeller):
 
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
-        self.setPositions(state.getPositions())
+        self.positions = state.getPositions()
 
         return self
 
