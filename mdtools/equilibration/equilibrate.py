@@ -23,10 +23,7 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
         If True, position restraints have been applied to simulation object
     """
 
-    # Get simulation platform
-    platform = Platform.getName(simulation.context.getPlatform())
-    print("Running simulation using {}".format(platform))
-
+    # Minimize system
     mdsystem.minimize()
 
     # Initialize velocities
