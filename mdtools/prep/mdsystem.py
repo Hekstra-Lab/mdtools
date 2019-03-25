@@ -104,7 +104,7 @@ class MDSystem(Modeller):
             force.addPerParticleParameter("y0")
             force.addPerParticleParameter("z0")
             for i in self.select("not water and not (element Na or element Cl) and not element H"):
-                force.addParticle(int(i), positions[i].value_in_unit(nanometers))
+                force.addParticle(int(i), self.positions[i].value_in_unit(nanometers))
             system.addForce(force)
         
         # Setup barostat for NPT ensemble
