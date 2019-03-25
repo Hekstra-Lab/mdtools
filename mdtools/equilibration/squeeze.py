@@ -48,8 +48,10 @@ def squeeze(mdsystem, tolerance=0.003):
         if change < tolerance:
             break
         
-        # Load checkpoint
+        # Load checkpoint and revert positions
         mdsystem.simulation.context.loadCheckpoint(checkpt)
+        state = mdsystem.simulation.context.getState(getPositions=True)
+	mdsystem.positions = state.getPositions()
 
         # Add or delete waters
         numWaters = np.floor(np.abs(change)/0.00147)
