@@ -29,7 +29,12 @@ def squeeze(mdsystem, tolerance=0.003):
     # Loop until converged
     iteration = 1
     while True:
-    
+
+        # Strict Minimization -- this was found to be necessary when
+        # running on GPUs to prevent force overflows due to close waters
+        mdsystem.buildSimulation(ensemble="NPT", posre=True, constraints=None, rigidWater=False)
+        mdsystem.minimize()
+        
         # Drop checkpoint
         mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
                              saveTrajectory=True, saveStateData=True)
