@@ -20,11 +20,6 @@ def squeeze(mdsystem, tolerance=0.003):
     # Target periodic box vectors
     target = mdsystem.topology.getPeriodicBoxVectors()
     target = np.array(target.value_in_unit(nanometers))
-
-    # Short pre-equilibration run
-    mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix="pre_equilibration",
-                             saveTrajectory=True, saveStateData=True)
-    mdsystem.equilibrate(simtime=100*picoseconds, posre=False)
     
     # Loop until converged
     iteration = 1
