@@ -40,6 +40,19 @@ class MDSystem(Modeller):
             r2.resSeq = int(r1.id)
         return mdtrajtop
 
+    def save(self, pdbfile):
+        """
+        Save a PDB file representing this molecular system.
+
+        Parameters
+        ----------
+        pdbfile : str
+            PDB filename to which molecular system will be written
+        """
+        with open(pdbfile, "w") as outfile:
+            PDBFile.writeFile(self.topology, self.positions, outfile)
+        return
+        
     def findMolecules(self):
         """
         Identify molecules based on bonded subsets of atoms.
