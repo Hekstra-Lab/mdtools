@@ -81,6 +81,7 @@ class MDSystem(Modeller):
         
     def buildSimulation(self, temperature=300*kelvin, ensemble="NPT", posre=False,
                         nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
+                        constraints=HBonds, rigidWater=True,
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
                         saveStateData=False, stateDataInterval=250):
         """
@@ -90,7 +91,7 @@ class MDSystem(Modeller):
         # Build system
         system = self.forcefield.createSystem(self.topology, nonbondedMethod=nonbondedMethod, 
                                               nonbondedCutoff=nonbondedCutoff, 
-                                              constraints=HBonds)
+                                              constraints=constraints, rigidWater=rigidWater)
 
         # Setup MD simulation
         dt = 0.002*picoseconds
