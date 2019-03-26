@@ -76,7 +76,7 @@ def duplicateWater(mdsystem):
     watercounts = []
     for c in mdtrajtop.chains:
         numwaters = sum([ 1 for r in c.residues if r.name == "HOH" ])
-        watercounts[c] = numwaters
+        watercounts.append(numwaters)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select a random water to duplicate
@@ -101,7 +101,7 @@ def deleteWater(mdsystem):
     watercounts = []
     for c in mdtrajtop.chains:
         numwaters = sum([ 1 for r in c.residues if r.name == "HOH" ])
-        watercounts[c] = numwaters
+        watercounts.append(numwaters)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select a random water to delete
