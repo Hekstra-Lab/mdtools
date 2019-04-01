@@ -99,7 +99,7 @@ class MDSystem(Modeller):
 
         # Add position restraints that can be tapered off during simulation
         if posre:
-            force = CustomExternalForce("k*((x-x0)^2+(y-y0)^2+(z-z0)^2)")
+            force = CustomExternalForce("k*periodicdistance(x, y, z, x0, y0, z0)^2")
             force.addGlobalParameter("k", 5.0*kilocalories_per_mole/angstroms**2)
             force.addPerParticleParameter("x0")
             force.addPerParticleParameter("y0")
