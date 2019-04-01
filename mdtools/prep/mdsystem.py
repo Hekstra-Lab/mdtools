@@ -79,7 +79,8 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
-    def buildSimulation(self, temperature=300*kelvin, ensemble="NPT", posre=False,
+    def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
+                        temperature=300*kelvin, ensemble="NPT", posre=False,
                         nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
                         constraints=HBonds, rigidWater=True,
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
@@ -94,8 +95,7 @@ class MDSystem(Modeller):
                                               constraints=constraints, rigidWater=rigidWater)
 
         # Setup MD simulation
-        dt = 0.002*picoseconds
-        integrator = LangevinIntegrator(temperature, 1/picosecond, dt)
+        integrator = integrator(temperature, 1/picosecond, dt)
 
         # Add position restraints that can be tapered off during simulation
         if posre:
