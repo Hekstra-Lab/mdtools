@@ -12,7 +12,7 @@ from simtk.openmm.app import *
 import mdtraj
 import numpy as np
 
-def squeeze(mdsystem, tolerance=0.003):
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
@@ -23,7 +23,7 @@ def squeeze(mdsystem, tolerance=0.003):
     
     # Loop until converged
     iteration = 1
-    while True:
+    while iteration <= maxIterations:
 
         # Strict Minimization -- this was found to be necessary when
         # running on GPUs to prevent force overflows due to close waters
