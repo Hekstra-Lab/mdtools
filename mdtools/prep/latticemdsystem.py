@@ -304,5 +304,5 @@ class LatticeMDSystem(MDSystem):
         else:
             return unitcell
 
-    def squeeze(self):
-        return squeeze.squeeze(self)
+    def squeeze(self, tolerance=0.003, maxIterations=10):
+        return squeeze.squeeze(self, tolerance=tolerance, maxIterations=maxIterations)
