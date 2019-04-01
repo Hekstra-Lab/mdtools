@@ -25,46 +25,50 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     iteration = 1
     while iteration <= maxIterations:
 
-        # Strict Minimization -- this was found to be necessary when
-        # running on GPUs to prevent force overflows due to close waters
-        mdsystem.buildSimulation(ensemble="NPT", posre=True, constraints=None, rigidWater=False)
-        mdsystem.minimize()
-        
-        # Drop checkpoint
-        mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
-                             saveTrajectory=True, saveStateData=True)
-        checkpt = mdsystem.simulation.context.createCheckpoint()
-    
-        # Equilibration run, tapering off position restraints
-        mdsystem.equilibrate(simtime=1.*nanoseconds, posre=True)
-        
+        # Build simulation
+	mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
+                                 saveTrajectory=True, saveStateData=True,
+                                 trajInterval=1000, stateDataInterval=1000)
+
+        # Save initial positions
+        state = mdsystem.simulation.context.getState(getPositions=True)
+        startingPositions = np.array(state.getPositions().value_in_unit(nanometers))
+
+	# Equilibration run, tapering off position restraints
+        mdsystem.equilibrate(simtime=2.0*nanoseconds, posre=True)
+
+        # Close open files
+        for reporter in mdsystem.simulation.reporters:
+            try:
+                reporter.close()
+            except:
+                continue
+
         # Determine change in periodic box vectors
-        state   = mdsystem.simulation.context.getState() 
-        current = state.getPeriodicBoxVectors()
-        current = np.array(current.value_in_unit(nanometers))
-        change = (target - current).max()
+        traj = mdtraj.load(f"iter{iteration}.h5")
+        current = np.mean(traj.unitcell_lengths[-100:], axis=0)
+	percent_change = (np.abs(np.diag(target) - current)/np.diag(target)).max()
+        change = (np.diag(target) - current).max()
+	print(f"Percent Change: {percent_change}")
 
         # Convergence criteria
-        if change < tolerance:
+        if percent_change < tolerance:
             break
-        
-        # Load checkpoint and revert positions
-        mdsystem.simulation.context.loadCheckpoint(checkpt)
-        state = mdsystem.simulation.context.getState(getPositions=True)
-        mdsystem.positions = state.getPositions()
+
+        # Revert positions and box vectors
+        mdsystem.positions = startingPositions*nanometers
+        mdsystem.topology.setPeriodicBoxVectors(targetv)
 
         # Add or delete waters
-        numWaters = np.floor(np.abs(change)/0.00147)
+        numWaters = np.floor(np.abs(change)/0.001)
         if change > 0.0:
-            for i in range(int(numWaters)):
-                duplicateWater(mdsystem)
+            duplicateWaters(mdsystem, int(numWaters))
         else:
-            for i in range(int(numWaters)):
-                deleteWater(mdsystem)
+            deleteWaters(mdsystem, int(numWaters))
 
         # Increment iteration
         iteration += 1
-                
+
     return
 
 def duplicateWater(mdsystem):
