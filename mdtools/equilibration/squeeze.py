@@ -79,15 +79,17 @@ def duplicateWater(mdsystem):
         watercounts.append(numwaters)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
-    # Select a random water to duplicate
-    residue      = chain.residue(np.random.randint(chain.n_residues))
-    atomindices  = [ a.index for a in residue.atoms ]
+    # Select n random waters to duplicate
+    randwaters = np.random.choice(chain.n_residues, n, replace=False)
+    residues   = [ chain.residue(i) for i in randwaters ]
+    atoms = itertools.chain(*[ r.atoms for r in residues ])
+    atomindices  = [ a.index for a in atoms ]
     newtop    = mdtrajtop.subset(atomindices)
     newtop = newtop.to_openmm()
     pos = np.array(mdsystem.positions.value_in_unit(nanometers))
 
     # Jitter the position to avoid singularity and add to system
-    jitter = (0.5-np.random.rand(3))*0.1
+    jitter = (0.5-np.random.rand(len(atomindices), 3))*0.2
     mdsystem.add(newtop, (pos[atomindices] + jitter)*nanometers)
 
     return
@@ -105,8 +107,10 @@ def deleteWater(mdsystem):
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select a random water to delete
-    residue      = chain.residue(np.random.randint(chain.n_residues))
-    atomindices  = [ a.index for a in residue.atoms ]
+    randwaters = np.random.choice(chain.n_residues, n, replace=False)
+    residues   = [ chain.residue(i) for i in randwaters ]
+    atoms = itertools.chain(*[ r.atoms for r in residues ])
+    atomindices  = [ a.index for a in atoms ]
     atoms = [ a for a in mdsystem.topology.atoms() if a.index in atomindices ]
     mdsystem.delete(atoms)
 
