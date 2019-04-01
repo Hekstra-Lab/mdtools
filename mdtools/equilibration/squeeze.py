@@ -26,7 +26,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     while iteration <= maxIterations:
 
         # Build simulation
-	mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
+        mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
                                  saveTrajectory=True, saveStateData=True,
                                  trajInterval=1000, stateDataInterval=1000)
 
@@ -34,7 +34,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         state = mdsystem.simulation.context.getState(getPositions=True)
         startingPositions = np.array(state.getPositions().value_in_unit(nanometers))
 
-	# Equilibration run, tapering off position restraints
+        # Equilibration run, tapering off position restraints
         mdsystem.equilibrate(simtime=2.0*nanoseconds, posre=True)
 
         # Close open files
@@ -47,9 +47,9 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         # Determine change in periodic box vectors
         traj = mdtraj.load(f"iter{iteration}.h5")
         current = np.mean(traj.unitcell_lengths[-100:], axis=0)
-	percent_change = (np.abs(np.diag(target) - current)/np.diag(target)).max()
+        percent_change = (np.abs(np.diag(target) - current)/np.diag(target)).max()
         change = (np.diag(target) - current).max()
-	print(f"Percent Change: {percent_change}")
+        print(f"Percent Change: {percent_change}")
 
         # Convergence criteria
         if percent_change < tolerance:
