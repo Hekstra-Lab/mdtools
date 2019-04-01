@@ -11,6 +11,9 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
     simulation. This method assumes that MDSystem.buildSimulation() has
     already been called.
 
+    Half of the simulation time is used for tapering restraints, and the
+    other half is simulated without position restraints.
+
     Parameters
     ----------
     mdsystem : MDSystem
@@ -31,10 +34,11 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
 
     # Taper restraints if they're applied
     if posre:
-        for i in range(11):
-            k = max((5.0 - (0.5*i)), 0)
+        splits = 41
+        for i in range(splits):
+            k = max((5.0 - (0.25*i)), 0)
             mdsystem.simulation.context.setParameter('k', k*kilocalories_per_mole/angstroms**2)
-            mdsystem.simulate(simtime/11)
+            mdsystem.simulate(simtime/splits)
     else:
         mdsystem.simulate(simtime)
             
