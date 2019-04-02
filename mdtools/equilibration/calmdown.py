@@ -19,17 +19,17 @@ def calmdown(mdsystem, posre=True):
     Aggressive relaxation of a molecular system for MD system. 
 
     Protocol:
-        1) Clashes/overlapping positions are identified, and their 
-           nonbonded interactions are excluded to prevent force 
-           overflows. 
-        2) Brownian dynamics is then used to gently equilibrate the 
-           system using a very short time step and without constraints
-           on hydrogens or water
-        3) The exceptions are then removed and Brownian dynamics is 
-           repeated with a slightly longer timestep, hydrogen constraints,
-           and rigid waters
-        4) Finally, Langevin dynamics is simulated with a 2 fs timestep
-           to ensure the simulation can be simulated.
+    1) Clashes/overlapping positions are identified, and their 
+       nonbonded interactions are excluded to prevent force 
+       overflows. 
+    2) Brownian dynamics is then used to gently equilibrate the 
+       system using a very short time step and without constraints
+       on hydrogens or water
+    3) The exceptions are then removed and Brownian dynamics is 
+       repeated with a slightly longer timestep, hydrogen constraints,
+       and rigid waters
+    4) Finally, Langevin dynamics is simulated with a 2 fs timestep
+       to ensure the simulation can be simulated.
 
     Parameters
     ----------
