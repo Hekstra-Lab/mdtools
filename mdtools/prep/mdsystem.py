@@ -82,7 +82,7 @@ class MDSystem(Modeller):
     def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
                         temperature=300*kelvin, ensemble="NPT", posre=False,
                         nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
-                        constraints=HBonds, rigidWater=True, exclusions=[],
+                        constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
                         saveStateData=False, stateDataInterval=250):
         """
@@ -108,11 +108,10 @@ class MDSystem(Modeller):
                 force.addParticle(int(i), self.positions[i].value_in_unit(nanometers))
             system.addForce(force)
 
-        # Setup exclusions in nonbonded forces
+        # Setup exceptions in nonbonded forces if provided
         nonbonded = system.getForce(3)
-        for atom1, atom2 in exclusions:
-            nonbonded.addException(atom1, atom2, chargeProd=0., sigma=0.,
-                                   epsilon=0., replace=True)
+        for atom1, atom2 in exceptions:
+            nonbonded.addException(int(atom1), int(atom2), 0.0, 0.0, 0.0, True)
             
         # Setup barostat for NPT ensemble
         if ensemble == "NPT":
