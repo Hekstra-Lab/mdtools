@@ -12,7 +12,7 @@ from simtk.openmm.app import *
 import mdtraj
 from mdtraj.reporters import HDF5Reporter
 import numpy as np
-from mdtools.equilibration import equilibrate
+from mdtools.equilibration import equilibrate, calmdown
 
 class MDSystem(Modeller):
     """
@@ -194,3 +194,28 @@ class MDSystem(Modeller):
             If True, position restraints have been applied to simulation object
         """
         return equilibrate.equilibrate(self, simtime, temperature, posre)
+
+    def calmdown(self, posre=True):
+        """
+        Aggressive relaxation of a molecular system for MD system. 
+        
+        Protocol:
+        1) Clashes/overlapping positions are identified, and their 
+           nonbonded interactions are excluded to prevent force 
+           overflows. 
+        2) Brownian dynamics is then used to gently equilibrate the 
+           system using a very short time step and without constraints
+           on hydrogens or water
+        3) The exceptions are then removed and Brownian dynamics is 
+           repeated with a slightly longer timestep, hydrogen constraints,
+           and rigid waters
+        4) Finally, Langevin dynamics is simulated with a 2 fs timestep
+           to ensure the simulation can be simulated.
+
+        Parameters
+        ----------
+        posre : bool
+            If true, position restraints are applied to non-water, 
+            non-ion heavy atoms in the system.
+        """
+        return calmdown.calmdown( self, posre=posre)
