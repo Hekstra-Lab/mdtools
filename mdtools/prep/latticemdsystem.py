@@ -294,7 +294,7 @@ class LatticeMDSystem(MDSystem):
             # Compute new positions
             newpos = pos.copy()
             newpos += pretransmat
-            newpos = np.dot(newpos, rotmat)
+            newpos = np.dot(rotmat, newpos.T).T
             newpos += posttransmat
             unitcell.add(top, newpos*angstrom)
 
