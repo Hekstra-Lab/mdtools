@@ -71,7 +71,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
     return
 
-def duplicateWater(mdsystem):
+def duplicateWaters(mdsystem, numWaters):
     """
     Duplicate a random water
     """
@@ -98,7 +98,7 @@ def duplicateWater(mdsystem):
 
     return
 
-def deleteWater(mdsystem):
+def deleteWaters(mdsystem, numWaters):
     """
     Delete a random water
     """
