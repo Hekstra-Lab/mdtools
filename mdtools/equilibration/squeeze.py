@@ -79,12 +79,12 @@ def duplicateWaters(mdsystem, numWaters):
     mdtrajtop    = mdsystem._toMDTrajTopology()
     watercounts = []
     for c in mdtrajtop.chains:
-        numwaters = sum([ 1 for r in c.residues if r.name == "HOH" ])
-        watercounts.append(numwaters)
+        n = sum([ 1 for r in c.residues if r.name == "HOH" ])
+        watercounts.append(n)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select n random waters to duplicate
-    randwaters = np.random.choice(chain.n_residues, n, replace=False)
+    randwaters = np.random.choice(chain.n_residues, numWaters, replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
@@ -106,12 +106,12 @@ def deleteWaters(mdsystem, numWaters):
     mdtrajtop    = mdsystem._toMDTrajTopology()
     watercounts = []
     for c in mdtrajtop.chains:
-        numwaters = sum([ 1 for r in c.residues if r.name == "HOH" ])
-        watercounts.append(numwaters)
+        n = sum([ 1 for r in c.residues if r.name == "HOH" ])
+        watercounts.append(n)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select a random water to delete
-    randwaters = np.random.choice(chain.n_residues, n, replace=False)
+    randwaters = np.random.choice(chain.n_residues, numWaters, replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
