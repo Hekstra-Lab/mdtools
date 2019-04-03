@@ -11,6 +11,7 @@ from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
 import numpy as np
+import itertools
 
 def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     """
