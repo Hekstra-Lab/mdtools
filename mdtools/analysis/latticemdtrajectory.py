@@ -18,4 +18,16 @@ class LatticeMDTrajectory(mdtraj.Trajectory):
         traj = mdtraj.load(filename)
         super().__init__(traj.xyz, traj.topology, traj.time,
                          traj.unitcell_lengths, traj.unitcell_angles)
+
+        # Validate unitcell information
+        self._validateUnitcell()
+        
+    def _validateUnitcell(self):
+        """
+        Validate unitcell information is provided and do sanity checks
+        """
+        if not self._have_unitcell:
+            raise AttributeError('Unitcell information is not provided')
+        self._check_valid_unitcell()
+        return
     
