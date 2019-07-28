@@ -21,6 +21,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     # Target periodic box vectors
     targetv = mdsystem.topology.getPeriodicBoxVectors()
     target = np.array(targetv.value_in_unit(nanometers))
+    targetvol = np.linalg.det(target)
     
     # Loop until converged
     iteration = 1
@@ -50,9 +51,9 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
         # Determine change in periodic box vectors
         traj = mdtraj.load(f"iter{iteration}.h5")
-        current = np.mean(traj.unitcell_lengths[-100:], axis=0)
-        percent_change = (np.abs(np.diag(target) - current)/np.diag(target)).max()
-        change = (np.diag(target) - current).max()
+        current = np.mean(traj.unitcell_volumes[-100:], axis=0)
+        percent_change = np.abs(targetvol - current) / targetvol
+        change = targetvol - current
         print(f"Percent Change: {percent_change}")
 
         # Convergence criteria
@@ -64,7 +65,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         mdsystem.topology.setPeriodicBoxVectors(targetv)
 
         # Add or delete waters
-        numWaters = np.floor(np.abs(change)/0.001)
+        numWaters = np.floor(np.abs(change)/0.1)
         if change > 0.0:
             duplicateWaters(mdsystem, int(numWaters))
         else:
