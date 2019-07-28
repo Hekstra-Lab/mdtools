@@ -26,6 +26,9 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
     iteration = 1
     while iteration <= maxIterations:
 
+        # Calmdown to relieve bad steric clashes
+        mdsystem.calmdown(posre=True)
+        
         # Build simulation
         mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
                                  saveTrajectory=True, saveStateData=True,
@@ -85,7 +88,7 @@ def duplicateWaters(mdsystem, numWaters):
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select n random waters to duplicate
-    randwaters = np.random.choice(chain.n_residues, numWaters, replace=False)
+    randwaters = np.random.choice(chain.n_residues, min(numWaters, chain.n_residues), replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
@@ -111,8 +114,8 @@ def deleteWaters(mdsystem, numWaters):
         watercounts.append(n)
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
-    # Select a random water to delete
-    randwaters = np.random.choice(chain.n_residues, numWaters, replace=False)
+    # Select n random waters to delete
+    randwaters = np.random.choice(chain.n_residues, min(numWaters, chain.n_residues), replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
