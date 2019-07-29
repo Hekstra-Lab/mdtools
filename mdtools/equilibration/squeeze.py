@@ -50,7 +50,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
                 continue
 
         # Determine change in periodic box vectors
-        traj = mdtraj.load(f"iter{iteration}.h5")
+        traj = mdtraj.load(f"iter{iteration:02d}.h5")
         current = np.mean(traj.unitcell_volumes[-100:], axis=0)
         percent_change = np.abs(targetvol - current) / targetvol
         change = targetvol - current
