@@ -31,7 +31,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         mdsystem.calmdown(posre=True)
         
         # Build simulation
-        mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration}",
+        mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration:02d}",
                                  saveTrajectory=True, saveStateData=True,
                                  trajInterval=1000, stateDataInterval=1000)
 
