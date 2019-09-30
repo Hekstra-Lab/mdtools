@@ -23,7 +23,7 @@ class LatticeMDTrajectory(mdtraj.Trajectory):
 
         # Validate unitcell information
         self._validateUnitcell()
-        
+
     def _validateUnitcell(self):
         """
         Validate unitcell information is provided and do sanity checks
