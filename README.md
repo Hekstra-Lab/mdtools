@@ -9,8 +9,7 @@ code will likely change.
 
 # Installation
 
-It is recommended to use the Anaconda distribution for Python 3.6. These
-scripts and libraries will make use of the following packages:
+These scripts and libraries will make use of the following packages:
 * OpenMM
 * MDTraj
 
