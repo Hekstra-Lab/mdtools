@@ -119,6 +119,7 @@ class MDSystem(Modeller):
             es_forces = system.getForce(3)
             system.addForce(force)
             for i in self.select(ef_sel):
+                i = int(i)
                 charge = es_forces.getParticleParameters(i)[0]
                 force.addParticle(i, [charge])
 
