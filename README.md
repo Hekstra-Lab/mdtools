@@ -1,17 +1,24 @@
 # mdtools: Tools for Running MD Simulations in OpenMM
 
-This repo will hold useful scripts and libraries for running MD simulations
-in OpenMM. For now, mdtools will hold an assortment of scripts/tools, but it will
-be reorganized once I better define my workflow and common use cases.
+This package is intended to provide a useful framework for running MD
+simulations using OpenMM. The goal of `mdtools` is to extend
+OpenMM's funcitonality by facilitating common use cases with sensible default
+parameter values. With `mdtools`, you can run an MD simulation of a protein in a
+waterbox or the unit cell from a crystal structure with just a few lines of Python code.
 
-For this reason, please be wary that the organization of this repo and behavior of
-code will likely change.
+For now, this repo is very much targeted to my current use cases, which
+involves modeling protein crystals by building up unit cells from the crystallographic
+asymmetric unit. 
 
 # Installation
 
-These scripts and libraries will make use of the following packages:
-* OpenMM
-* MDTraj
+I have not yet made this package available on PyPI. Until then, `mdtools` can be
+installed locally by cloning the repository and using the included `setup.py`:
+
+```
+git clone https://github.com/JBGreisman/mdtools.git
+python setup.py install
+```
 
 # Examples
 
