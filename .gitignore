@@ -1,3 +1,11 @@
+# Autosave files
 *~
+
+# Python
 *.pyc
 __pycache__*
+
+# Packaging
+build
+dist
+*.egg-info
