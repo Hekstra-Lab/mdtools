@@ -80,9 +80,10 @@ class MDSystem(Modeller):
         return mdtrajtop.select(selection)
         
     def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
-                        temperature=300*kelvin, ensemble="NPT", posre=False, efx=False,
-                        ef=(0,0,0), nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
-                        constraints=HBonds, rigidWater=True, exceptions=[],
+                        temperature=300*kelvin, ensemble="NPT", posre=False,
+                        posre_sel="not water and not (element Na or element Cl) and not element H",
+                        efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
+                        nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
                         saveStateData=False, stateDataInterval=250):
         """
@@ -104,7 +105,7 @@ class MDSystem(Modeller):
             force.addPerParticleParameter("x0")
             force.addPerParticleParameter("y0")
             force.addPerParticleParameter("z0")
-            for i in self.select("not water and not (element Na or element Cl) and not element H"):
+            for i in self.select(posre_sel):
                 force.addParticle(int(i), self.positions[i].value_in_unit(nanometers))
             system.addForce(force)
 
@@ -117,7 +118,7 @@ class MDSystem(Modeller):
             force.addPerParticleParameter("charge")
             es_forces = system.getForce(3)
             system.addForce(force)
-            for i in range(system.getNumParticles()):
+            for i in self.select(ef_sel):
                 charge = es_forces.getParticleParameters(i)[0]
                 force.addParticle(i, [charge])
 
