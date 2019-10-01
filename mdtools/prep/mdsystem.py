@@ -80,8 +80,8 @@ class MDSystem(Modeller):
         return mdtrajtop.select(selection)
         
     def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
-                        temperature=300*kelvin, ensemble="NPT", posre=False,
-                        nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
+                        temperature=300*kelvin, ensemble="NPT", posre=False, efx=False,
+                        ef=(0,0,0), nonbondedMethod=PME, nonbondedCutoff=1.*nanometer,
                         constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
                         saveStateData=False, stateDataInterval=250):
@@ -107,6 +107,19 @@ class MDSystem(Modeller):
             for i in self.select("not water and not (element Na or element Cl) and not element H"):
                 force.addParticle(int(i), self.positions[i].value_in_unit(nanometers))
             system.addForce(force)
+
+        # Add external electric field
+        if efx:
+            force = CustomExternalForce('(Ex*charge*x)+(Ey*charge*y)+(Ez*charge*z)')
+            force.addGlobalParameter("Ex", ef[0])
+            force.addGlobalParameter("Ey", ef[1])
+            force.addGlobalParameter("Ez", ef[2])
+            force.addPerParticleParameter("charge")
+            es_forces = system.getForce(3)
+            system.addForce(force)
+            for i in range(system.getNumParticles()):
+                charge = es_forces.getParticleParameters(i)[0]
+                force.addParticle(i, [charge])
 
         # Setup exceptions in nonbonded forces if provided
         nonbonded = system.getForce(3)
