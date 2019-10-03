@@ -55,12 +55,12 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             sterr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
 
             # Check convergence criteria
-            percent_diff1 = np.abs(targetvol - (vol+sterr)) / targetvol
-            percent_diff2 = np.abs(targetvol - (vol-sterr)) / targetvol
+            percent_diff1 = (targetvol - (vol+sterr)) / targetvol
+            percent_diff2 = (targetvol - (vol-sterr)) / targetvol
             change = targetvol - vol
 
             # Case 1: simulation cell has converged within error margins
-            if (percent_diff1 < tolerance) and (percent_diff2 < tolerance):
+            if (np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance):
                 converged = True
                 break
 
@@ -70,9 +70,9 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
                 break
             
             # Case 3: simulation cell is close but uncertainty is high
-            elif (((percent_diff1 < tolerance) and (percent_diff2 > tolerance)) or
-                  ((percent_diff1 > tolerance) and (percent_diff2 < tolerance)) or
-                  ((np.abs(change)/targetvol < tolerance) and (percent_diff1 > tolerance) and (percent_diff2 > tolerance))):
+            elif (((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) > tolerance)) or
+                  ((np.abs(percent_diff1) > tolerance) and (np.abs(percent_diff2) < tolerance)) or
+                  ((percent_diff1 < -tolerance) and (percent_diff2 > tolerance))):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
                 continue
