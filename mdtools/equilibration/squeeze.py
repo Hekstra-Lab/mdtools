@@ -11,6 +11,8 @@ from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
 import numpy as np
+from scipy import stats
+import pandas as pd
 import itertools
 
 def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
@@ -42,6 +44,41 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         # Equilibration run, tapering off position restraints
         mdsystem.equilibrate(simtime=2.0*nanoseconds, posre=True)
 
+        # Assess convergence of unit cell volume
+        simtime = 250
+        converged = False
+        while True:
+
+            # Compute mean and standard error of unit cell volume
+            df = pd.read_csv(f"iter{iteration:02d}.csv")
+            vol   = df["Box Volume (nm^3)"].iloc[-simtime:].mean() 
+            sterr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
+
+            # Check convergence criteria
+            percent_change1 = np.abs(targetvol - (vol+sterr)) / targetvol
+            percent_change2 = np.abs(targetvol - (vol-sterr)) / targetvol
+            change = targetvol - vol
+
+            # Case 1: simulation cell has converged within error margins
+            if (percent_change1 < tolerance) and (percent_change2 < tolerance):
+                converged = True
+                break
+
+            # Case 2: simulation cell is close but uncertainty is high
+            elif (((percent_change1 < tolerance) and (percent_change2 > tolerance)) or
+                  ((percent_change1 > tolerance) and (percent_change2 < tolerance))):
+                mdsystem.simulate(1.0*nanoseconds)
+                simtime += 500
+                continue
+
+            # Case 3: simulation cell is too far from convergence
+            else:
+                break
+    
+
+            
+        print(f"Percent Change: {percent_change1}")
+
         # Close open files
         for reporter in mdsystem.simulation.reporters:
             try:
@@ -49,15 +86,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             except:
                 continue
 
-        # Determine change in periodic box vectors
-        traj = mdtraj.load(f"iter{iteration:02d}.h5")
-        current = np.mean(traj.unitcell_volumes[-100:], axis=0)
-        percent_change = np.abs(targetvol - current) / targetvol
-        change = targetvol - current
-        print(f"Percent Change: {percent_change}")
-
-        # Convergence criteria
-        if percent_change < tolerance:
+        # Check squeeze run convergence criteria
+        if converged:
             break
 
         # Revert positions and box vectors
