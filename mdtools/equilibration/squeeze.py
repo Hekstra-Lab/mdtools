@@ -85,7 +85,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
                 converged = False
                 break
 
-        print(f"Percent Change: {change/targetvol} +/- {stderr/targetvol} ")
+        print(f"Percent Change: {change/targetvol} +/- {stderr/targetvol}", flush=True)
 
         # Close open files
         for reporter in mdsystem.simulation.reporters:
