@@ -55,29 +55,32 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             sterr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
 
             # Check convergence criteria
-            percent_change1 = np.abs(targetvol - (vol+sterr)) / targetvol
-            percent_change2 = np.abs(targetvol - (vol-sterr)) / targetvol
+            percent_diff1 = np.abs(targetvol - (vol+sterr)) / targetvol
+            percent_diff2 = np.abs(targetvol - (vol-sterr)) / targetvol
             change = targetvol - vol
 
             # Case 1: simulation cell has converged within error margins
-            if (percent_change1 < tolerance) and (percent_change2 < tolerance):
+            if (percent_diff1 < tolerance) and (percent_diff2 < tolerance):
                 converged = True
                 break
 
-            # Case 2: simulation cell is close but uncertainty is high
-            elif (((percent_change1 < tolerance) and (percent_change2 > tolerance)) or
-                  ((percent_change1 > tolerance) and (percent_change2 < tolerance))):
+            # Case 2: Simulation has gone on for more than 10ns
+            elif (simtime > 5000):
+                converged = False
+                break
+            
+            # Case 3: simulation cell is close but uncertainty is high
+            elif (((percent_diff1 < tolerance) and (percent_diff2 > tolerance)) or
+                  ((percent_diff1 > tolerance) and (percent_diff2 < tolerance))):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
                 continue
 
-            # Case 3: simulation cell is too far from convergence
+            # Case 4: simulation cell is too far from convergence
             else:
                 break
-    
-
-            
-        print(f"Percent Change: {percent_change1}")
+                
+        print(f"Percent Change: {change/targetvol} +/- {sterr/targetvol} ")
 
         # Close open files
         for reporter in mdsystem.simulation.reporters:
