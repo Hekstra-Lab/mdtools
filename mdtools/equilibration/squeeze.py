@@ -71,7 +71,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             
             # Case 3: simulation cell is close but uncertainty is high
             elif (((percent_diff1 < tolerance) and (percent_diff2 > tolerance)) or
-                  ((percent_diff1 > tolerance) and (percent_diff2 < tolerance))):
+                  ((percent_diff1 > tolerance) and (percent_diff2 < tolerance)) or
+                  ((np.abs(change)/targetvol < tolerance) and (percent_diff1 > tolerance) and (percent_diff2 > tolerance))):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
                 continue
