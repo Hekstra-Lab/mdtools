@@ -52,36 +52,40 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             # Compute mean and standard error of unit cell volume
             df = pd.read_csv(f"iter{iteration:02d}.csv")
             vol   = df["Box Volume (nm^3)"].iloc[-simtime:].mean() 
-            sterr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
-
+            stderr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
+            
             # Check convergence criteria
-            percent_diff1 = (targetvol - (vol+sterr)) / targetvol
-            percent_diff2 = (targetvol - (vol-sterr)) / targetvol
+            percent_diff1 = (targetvol - (vol+stderr)) / targetvol
+            percent_diff2 = (targetvol - (vol-stderr)) / targetvol
             change = targetvol - vol
 
-            # Case 1: simulation cell has converged within error margins
-            if (np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance):
-                converged = True
-                break
-
-            # Case 2: Simulation has gone on for more than 10ns
-            elif (simtime > 5000):
+            # Case 1: Both error bounds are on one side of targetvol
+            if (((percent_diff1 < 0) and (percent_diff2 < 0)) or
+                ((percent_diff1 > 0) and (percnet_diff2 > 0))):
                 converged = False
                 break
             
-            # Case 3: simulation cell is close but uncertainty is high
-            elif (((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) > tolerance)) or
-                  ((np.abs(percent_diff1) > tolerance) and (np.abs(percent_diff2) < tolerance)) or
-                  ((percent_diff1 < -tolerance) and (percent_diff2 > tolerance))):
+            # Case 2: stderr is too high 
+            elif ((stderr/vol) > tolerance):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
                 continue
 
-            # Case 4: simulation cell is too far from convergence
-            else:
+            # Case 3: Too much simulation time -- probably not correct
+            elif simtime > 5000:
+                converged = False
                 break
-                
-        print(f"Percent Change: {change/targetvol} +/- {sterr/targetvol} ")
+            
+            # Case 4: simulation cell has converged within error margins
+            elif (np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance):
+                converged = True
+                break
+            
+            else:
+                converged = False
+                break
+
+        print(f"Percent Change: {change/targetvol} +/- {stderr/targetvol} ")
 
         # Close open files
         for reporter in mdsystem.simulation.reporters:
