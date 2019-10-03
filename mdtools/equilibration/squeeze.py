@@ -103,7 +103,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         mdsystem.topology.setPeriodicBoxVectors(targetv)
 
         # Add or delete waters
-        numWaters = np.floor(np.abs(change)/0.1)
+        numWaters = np.floor(np.abs(change)/0.075)
         if change > 0.0:
             duplicateWaters(mdsystem, int(numWaters))
         else:
