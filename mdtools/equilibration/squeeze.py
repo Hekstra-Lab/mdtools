@@ -59,30 +59,37 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             percent_diff2 = (targetvol - (vol-stderr)) / targetvol
             change = targetvol - vol
 
+            print(vol, stderr, percent_diff1, percent_diff2, change, flush=True)
+            
             # Case 1: Both error bounds are on one side of targetvol
             if (((percent_diff1 < 0) and (percent_diff2 < 0)) or
                 ((percent_diff1 > 0) and (percent_diff2 > 0))):
                 converged = False
+                print("case 1", flush=True)
                 break
             
             # Case 2: stderr is too high 
             elif (stderr > tolerance):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
+                print("case 2", flush=True)
                 continue
 
             # Case 3: Too much simulation time -- probably not correct
             elif simtime > 5000:
                 converged = False
+                print("case 3", flush=True)
                 break
             
             # Case 4: simulation cell has converged within error margins
             elif (np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance):
                 converged = True
+                print("case 4", flush=True)
                 break
             
             else:
                 converged = False
+                print("case 5", flush=True)
                 break
 
         print(f"Percent Change: {change/targetvol} +/- {stderr/targetvol}", flush=True)
@@ -103,7 +110,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         mdsystem.topology.setPeriodicBoxVectors(targetv)
 
         # Add or delete waters
-        numWaters = np.floor(np.abs(change)/0.075)
+        numWaters = np.floor(np.abs(change)/0.025)
         if change > 0.0:
             duplicateWaters(mdsystem, int(numWaters))
             print(f"+{numWaters} waters", flush=True)
