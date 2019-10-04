@@ -61,7 +61,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
             # Case 1: Both error bounds are on one side of targetvol
             if (((percent_diff1 < 0) and (percent_diff2 < 0)) or
-                ((percent_diff1 > 0) and (percnet_diff2 > 0))):
+                ((percent_diff1 > 0) and (percent_diff2 > 0))):
                 converged = False
                 break
             
