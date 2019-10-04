@@ -66,7 +66,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
                 break
             
             # Case 2: stderr is too high 
-            elif ((stderr/vol) > tolerance):
+            elif (stderr > tolerance):
                 mdsystem.simulate(1.0*nanoseconds)
                 simtime += 500
                 continue
