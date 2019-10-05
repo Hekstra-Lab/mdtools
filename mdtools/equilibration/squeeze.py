@@ -47,7 +47,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         # Case 1: Too far from convergence, adjust number of waters
         vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 250)
         change = targetvol - vol
-        if (change / targetvol) > 3*threshold:
+        if (change / targetvol) > 3*tolerance:
             converged = False
             print("Case 1: Too far from convergence", flush=True)
 
