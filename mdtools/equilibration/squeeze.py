@@ -67,19 +67,19 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
                 print("case 4", flush=True)
                 break
 
+            # Case 2: stderr is too high 
+            elif ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance) and (stderr > tolerance)):
+                mdsystem.simulate(1.0*nanoseconds)
+                simtime += 500
+                print("case 2", flush=True)
+                continue
+            
             # Case 1: Both error bounds are on one side of targetvol
             elif (((percent_diff1 < 0) and (percent_diff2 < 0)) or
                   ((percent_diff1 > 0) and (percent_diff2 > 0))):
                 converged = False
                 print("case 1", flush=True)
                 break
-            
-            # Case 2: stderr is too high 
-            elif (stderr > tolerance):
-                mdsystem.simulate(1.0*nanoseconds)
-                simtime += 500
-                print("case 2", flush=True)
-                continue
 
             # Case 3: Too much simulation time -- probably not correct
             elif simtime > 5000:
