@@ -62,14 +62,14 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
             print(vol, stderr, percent_diff1, percent_diff2, change, flush=True)
             
             # Case 4: simulation cell has converged within error margins
-            elif ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance) and (stderr < tolerance)):
+            if ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance) and (stderr < tolerance)):
                 converged = True
                 print("case 4", flush=True)
                 break
 
             # Case 1: Both error bounds are on one side of targetvol
-            if (((percent_diff1 < 0) and (percent_diff2 < 0)) or
-                ((percent_diff1 > 0) and (percent_diff2 > 0))):
+            elif (((percent_diff1 < 0) and (percent_diff2 < 0)) or
+                  ((percent_diff1 > 0) and (percent_diff2 > 0))):
                 converged = False
                 print("case 1", flush=True)
                 break
