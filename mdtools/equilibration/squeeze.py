@@ -43,9 +43,10 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
         # Equilibration run, tapering off position restraints
         mdsystem.equilibrate(simtime=2.0*nanoseconds, posre=True)
-
+        mdsystem.simulate(3.0*nanoseconds)
+        
         # Assess convergence of unit cell volume
-        simtime = 250
+        simtime = 1750
         converged = False
         while True:
 
@@ -110,7 +111,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
         mdsystem.topology.setPeriodicBoxVectors(targetv)
 
         # Add or delete waters
-        numWaters = np.floor(np.abs(change)/0.025)
+        numWaters = np.floor(np.abs(change)/0.05)
         if change > 0.0:
             duplicateWaters(mdsystem, int(numWaters))
             print(f"+{numWaters} waters", flush=True)
