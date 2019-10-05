@@ -43,57 +43,33 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
         # Equilibration run, tapering off position restraints
         mdsystem.equilibrate(simtime=2.0*nanoseconds, posre=True)
-        mdsystem.simulate(3.0*nanoseconds)
-        
-        # Assess convergence of unit cell volume
-        simtime = 1750
-        converged = False
-        while True:
 
-            # Compute mean and standard error of unit cell volume
-            df = pd.read_csv(f"iter{iteration:02d}.csv")
-            vol   = df["Box Volume (nm^3)"].iloc[-simtime:].mean() 
-            stderr = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
-            
+        # Case 1: Too far from convergence, adjust number of waters
+        vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 250)
+        change = targetvol - vol
+        if (change / targetvol) > 3*threshold:
+            converged = False
+            print("Case 1: Too far from convergence", flush=True)
+
+        # Otherwise, simulate more, and assess convergence
+        else:
+            mdsystem.simulate(3.0*nanoseconds)
+            vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 1750)
+
             # Check convergence criteria
-            percent_diff1 = (targetvol - (vol+stderr)) / targetvol
-            percent_diff2 = (targetvol - (vol-stderr)) / targetvol
-            change = targetvol - vol
+            percent_diff1 = (targetvol - (vol+sem)) / targetvol
+            percent_diff2 = (targetvol - (vol-sem)) / targetvol
 
-            print(vol, stderr, percent_diff1, percent_diff2, change, flush=True)
-            
-            # Case 4: simulation cell has converged within error margins
-            if ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance) and (stderr < tolerance)):
+            # Case 2: simulation cell has converged within error margins
+            if ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance)):
                 converged = True
-                print("case 4", flush=True)
-                break
+                print("Case 2: converged", flush=True)
 
-            # Case 2: stderr is too high 
-            elif ((np.abs(percent_diff1) < tolerance) and (np.abs(percent_diff2) < tolerance) and (stderr > tolerance)):
-                mdsystem.simulate(1.0*nanoseconds)
-                simtime += 500
-                print("case 2", flush=True)
-                continue
-            
-            # Case 1: Both error bounds are on one side of targetvol
-            elif (((percent_diff1 < 0) and (percent_diff2 < 0)) or
-                  ((percent_diff1 > 0) and (percent_diff2 > 0))):
-                converged = False
-                print("case 1", flush=True)
-                break
-
-            # Case 3: Too much simulation time -- probably not correct
-            elif simtime > 5000:
-                converged = False
-                print("case 3", flush=True)
-                break
-            
             else:
                 converged = False
-                print("case 5", flush=True)
-                break
+                print("Case 3: simulated more; not converged", flush=True)
 
-        print(f"Percent Change: {change/targetvol} +/- {stderr/targetvol}", flush=True)
+        print(f"Percent Change: {change/targetvol} +/- {sem/targetvol}", flush=True)
 
         # Close open files
         for reporter in mdsystem.simulation.reporters:
@@ -124,6 +100,29 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
     return
 
+def _computeVolumeStats(csvfile, simtime):
+    """
+    Determine mean, sem, and std of box volume. 
+
+    Parameters
+    ----------
+    csvfile : str
+        CSV file from OpenMM StateDataReporter
+    simtime : int
+        Number of frames from simulation end to consider for
+        box volume statistics
+
+    Returns
+    -------
+    (vol, sem, std) : tuple
+         Mean, standard error, and standard deviation of the box volume
+    """
+    df = pd.read_csv(csvfile)
+    vol = df["Box Volume (nm^3)"].iloc[-simtime:].mean()
+    sem = stats.sem(df["Box Volume (nm^3)"].iloc[-simtime:])
+    std = df["Box Volume (nm^3)"].iloc[-simtime:].std()
+    return vol, sem, std
+    
 def duplicateWaters(mdsystem, numWaters):
     """
     Duplicate a random water
