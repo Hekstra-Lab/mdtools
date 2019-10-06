@@ -53,8 +53,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
         # Otherwise, simulate more, and assess convergence
         else:
-            mdsystem.simulate(3.0*nanoseconds)
-            vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 1750)
+            mdsystem.simulate(8.0*nanoseconds)
+            vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 4250)
 
             # Check convergence criteria
             percent_diff1 = (targetvol - (vol+sem)) / targetvol
