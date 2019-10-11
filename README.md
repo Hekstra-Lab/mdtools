@@ -16,6 +16,7 @@ installed locally by cloning the repository and using the included `setup.py`:
 
 ```
 git clone https://github.com/JBGreisman/mdtools.git
+cd mdtools
 python setup.py install
 ```
 
