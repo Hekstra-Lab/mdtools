@@ -15,7 +15,7 @@ from scipy import stats
 import pandas as pd
 import itertools
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
@@ -53,7 +53,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10):
 
         # Otherwise, simulate more, and assess convergence
         else:
-            mdsystem.simulate(8.0*nanoseconds)
+            mdsystem.simulate(maxSimtime - 2.0*nanoseconds)
             vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", 4250)
 
             # Check convergence criteria
