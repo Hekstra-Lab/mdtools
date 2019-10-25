@@ -12,7 +12,7 @@ from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
 import numpy as np
-import itertools
+from scipy.spatial.distance import pdist, squareform
 
 def calmdown(mdsystem, posre=True):
     """
@@ -81,9 +81,16 @@ def _identifyProblemPairs(mdsystem):
         nonbonded force calculations
     """
     # Identify atoms with force overflows or large forces
-    state = mdsystem.simulation.context.getState(getForces=True)
+    state = mdsystem.simulation.context.getState(getPositions=True,
+                                                 getForces=True)
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
-    indices = np.where(np.isnan(netforces) | (netforces > 5e4))[0]
+    indices = np.where(np.isnan(netforces) | (netforces > 1e4))[0]
+
+    # Return list of force overflow atoms that are also < 3A from each
+    # other
+    positions = state.getPositions(asNumpy=True)[indices]
+    dists = squareform(pdist(positions))
+    pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(dists < 0.3)) if i != j ]
     
-    return itertools.combinations(indices, 2)
+    return pairs
     
