@@ -83,7 +83,7 @@ def _identifyProblemPairs(mdsystem):
     # Identify atoms with force overflows or large forces
     state = mdsystem.simulation.context.getState(getForces=True)
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
-    indices = np.where(np.isnan(netforces) | (netforces > 1e4))[0]
+    indices = np.where(np.isnan(netforces) | (netforces > 5e4))[0]
     
     return itertools.combinations(indices, 2)
     
