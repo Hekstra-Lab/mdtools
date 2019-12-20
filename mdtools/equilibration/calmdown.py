@@ -86,8 +86,8 @@ def _identifyProblemPairs(mdsystem):
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
     indices = np.where(np.isnan(netforces) | (netforces > 1e4))[0]
 
-    # Return list of force overflow atoms that are also < 3A from each
-    # other
+    # Return list of force overflow atoms that are also < 3A eachother
+    # TO DO: This should really be a periodic distance...
     positions = state.getPositions(asNumpy=True)[indices]
     dists = squareform(pdist(positions))
     pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(dists < 0.3)) if i != j ]
