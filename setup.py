@@ -10,6 +10,5 @@ setup(
     install_requires=[
         "numpy >= 1.6",
         "mdtraj >= 1.9",
-        "openmm",
     ],
 )
