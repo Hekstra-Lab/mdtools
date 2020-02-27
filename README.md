@@ -18,6 +18,7 @@ installed locally by cloning the repository and using the included `setup.py`:
 git clone https://github.com/JBGreisman/mdtools.git
 cd mdtools
 conda install -c omnia -c conda-forge openmm
+conda install -c conda-forge mdtraj
 python setup.py install
 ```
 
