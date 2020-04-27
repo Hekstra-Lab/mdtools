@@ -195,6 +195,14 @@ class MDSystem(Modeller):
         else:
             self.simulation.step(self._time2steps(n))
 
+        # If simulation step is 0, output the starting configuration to
+        # reporters
+        if self.simulation.currentStep == 0:
+            for reporter in self.simulation.reporters:
+                report = reporter.describeNextReport(self.simulation)
+                state  = self.simulation.context.getState(*report[1:])
+                reporter.report(self.simulation, state)
+                
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
         self.positions = state.getPositions()
