@@ -22,7 +22,8 @@ class MDSystem(Modeller):
     def __init__(self, topology, positions, forcefield):
         Modeller.__init__(self, topology, positions)
         self.forcefield = forcefield
-
+        self.simulation = None
+        
     def _toMDTrajTopology(self):
         """
         Returns a MDTraj Topology object from the OpenMM Topology of 
@@ -90,6 +91,15 @@ class MDSystem(Modeller):
         Build a simulation context from the system. The simulation is
         then available as an attribute.
         """
+
+        # If simulation exists, close any reporters
+        if self.simulation is not None:
+            for reporter in self.simulation.reporters:
+                try:
+                    reporter.close()
+                except:
+                    continue
+
         # Build system
         system = self.forcefield.createSystem(self.topology, nonbondedMethod=nonbondedMethod, 
                                               nonbondedCutoff=nonbondedCutoff, 
@@ -234,3 +244,32 @@ class MDSystem(Modeller):
             non-ion heavy atoms in the system.
         """
         return calmdown.calmdown( self, posre=posre)
+
+    def getCharges(self, selection):
+        """
+        Get partial charges associated with atoms in selections. 
+
+        Parameters
+        ----------
+        selection : str
+            MDTraj-style atom selection string
+
+        Returns
+        -------
+        np.ndarray
+            Partial charges assigned by forcefield to atoms selected by
+            selection string
+        """
+        remove = False
+        if self.simulation is None:
+            self.buildSimulation()
+            remove = True
+
+        force = self.simulation.system.getForce(3)
+        indices = self.select(selection)
+        charges = [ force.getParticleParameters(int(i))[0].value_in_unit(elementary_charge) for i in indices ]
+
+        if remove:
+            self.simulation = None
+        
+        return np.array(charges)
