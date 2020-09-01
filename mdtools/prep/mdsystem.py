@@ -81,7 +81,7 @@ class MDSystem(Modeller):
         return mdtrajtop.select(selection)
         
     def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
-                        temperature=300*kelvin, ensemble="NPT", posre=False,
+                        temperature=298.15*kelvin, ensemble="NPT", posre=False,
                         posre_sel="not water and not (element Na or element Cl) and not element H",
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
