@@ -69,12 +69,18 @@ class LatticeMDSystem(MDSystem):
         # Neutralize system
         if neutralize:
 
+            # Determine whether divalent cation
+            divalentCation = "2" in positiveIon
+            
             # Determine ion type
             posIonElements = {'Cs+':element.cesium,
                               'K+':element.potassium,
                               'Li+':element.lithium,
                               'Na+':element.sodium,
-                              'Rb+':element.rubidium}
+                              'Rb+':element.rubidium,
+                              'Mn2+':element.manganese,
+                              'Mg2+':element.magnesium,
+                              'Ca2+':element.calcium}
             negIonElements = {'Cl-':element.chlorine,
                               'Br-':element.bromine,
                               'F-':element.fluorine,
@@ -103,15 +109,23 @@ class LatticeMDSystem(MDSystem):
             ions.topology.setPeriodicBoxVectors(vectors)
             newChain = ions.topology.addChain("ions")
 
-            for i in range(abs(totalCharge)):
+            while totalCharge != 0:
                 if totalCharge < 0:
                     ions, waterbox = self._waterToIon(ions, waterbox, positiveElement)
+                    if divalentCation:
+                        totalCharge += 2
+                    else:
+                        totalCharge += 1
                 else:
                     ions, waterbox = self._waterToIon(ions, waterbox, negativeElement)
+                    totalCharge -= 1
 
             for i in range(numPairs):
                 ions, waterbox = self._waterToIon(ions, waterbox, positiveElement)
                 ions, waterbox = self._waterToIon(ions, waterbox, negativeElement)
+                # If divalent cation, neutralize with 2 negative ions
+                if divalentCation:
+                    ions, waterbox = self._waterToIon(ions, waterbox, negativeElement)
 
         self.add(waterbox.topology, waterbox.positions)
         if neutralize:
