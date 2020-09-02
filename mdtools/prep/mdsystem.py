@@ -179,29 +179,31 @@ class MDSystem(Modeller):
         dt = self.simulation.integrator.getStepSize()
         return int(np.ceil(chemtime / dt))
         
-    def simulate(self, n):
+    def simulate(self, n, outputStartingFrame=True):
         """
         Simulate the system for the given number of steps. If n is a 
         simtk.Unit of time, the number of steps are chosen to simulate
-        for the indicated chemical time
+        for the indicated chemical time. 
 
         Parameters
         ----------
         n : int or simtk.unit
             Number of steps or chemical time of simulation
+        outputStartingFrame : bool
+            Whether to output the initial frame of a simulation
         """
-        if isinstance(n, int):
-            self.simulation.step(n)
-        else:
-            self.simulation.step(self._time2steps(n))
-
-        # If simulation step is 0, output the starting configuration to
-        # reporters
-        if self.simulation.currentStep == 0:
+        # If simulation step is 0, output the starting configuration
+        if self.simulation.currentStep == 0 and outputStartingFrame:
             for reporter in self.simulation.reporters:
                 report = reporter.describeNextReport(self.simulation)
                 state  = self.simulation.context.getState(*report[1:])
                 reporter.report(self.simulation, state)
+
+        # Run simulation
+        if isinstance(n, int):
+            self.simulation.step(n)
+        else:
+            self.simulation.step(self._time2steps(n))
                 
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
