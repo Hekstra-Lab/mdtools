@@ -82,6 +82,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
 
         # Check squeeze run convergence criteria
         if converged:
+            mdsystem.saveCheckpoint("squeezed.chkpt")
             break
 
         # Revert positions and box vectors
