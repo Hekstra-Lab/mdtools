@@ -157,6 +157,28 @@ class MDSystem(Modeller):
         
         return self
 
+    def saveCheckpoint(self, filename):
+        """
+        Save a checkpoint of the simulation to a file.
+
+        Parameters
+        ----------
+        filename : str
+            File to which checkpoint will be saved
+        """
+        return self.simulation.saveCheckpoint(filename)
+
+    def loadCheckpoint(self, filename):
+        """
+        Load a checkpoint of the simulation from a file.
+
+        Parameters
+        ----------
+        filename : str
+            File from which checkpoint will be loaded
+        """
+        return self.simulation.loadCheckpoint(filename)
+    
     def minimize(self):
         """
         Minimize the system using the simulation context. If a simulation
