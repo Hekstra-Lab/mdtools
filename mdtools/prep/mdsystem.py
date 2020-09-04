@@ -157,7 +157,7 @@ class MDSystem(Modeller):
         
         return self
 
-    def thermalize(self, temperature, randomSeed):
+    def thermalize(self, temperature, randomSeed=None):
         """
         Set velocities of all particles to random values chosen from a 
         Maxwell-Boltzmann distribution for the given temeprature. 
@@ -169,7 +169,10 @@ class MDSystem(Modeller):
         randomSeed :  int
             Seed for random number generator
         """
-        return self.simulation.context.setVelocitiesToTemperature(temperature, randomSeed)
+        if randomSeed:
+            return self.simulation.context.setVelocitiesToTemperature(temperature, randomSeed)
+        else:
+            return self.simulation.context.setVelocitiesToTemperature(temperature)
 
     def saveCheckpoint(self, filename):
         """
