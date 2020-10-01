@@ -86,7 +86,7 @@ class MDSystem(Modeller):
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500,
-                        saveStateData=False, stateDataInterval=250):
+                        saveStateData=False, stateDataInterval=250, atomSubset=None):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
@@ -151,7 +151,7 @@ class MDSystem(Modeller):
 
         # Add reporters
         if saveTrajectory:
-            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval))
+            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset))
         if saveStateData:
             self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
         

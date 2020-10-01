@@ -275,13 +275,16 @@ class LatticeMDSystem(MDSystem):
         sg = sg_canonicalize(self.spacegroup)
         matrices = sg_sym_to_mat_list(sg)
         basis = self._getUnitCellBasis()
+        print(basis)
         
         # Determine unit cell center
         pos = np.array(self.positions.value_in_unit(angstrom))
         top = self.getTopology()
         center = (pos.max(axis=0) + pos.min(axis=0))* 0.5
         center = np.matrix(center.tolist() + [1.0]).T
+        print(center)
         center_cell = basis.I * center
+        print(center_cell)
         
         # Determine shift based on unit cell indices
         extra_shift = [ [float(i)] for i in (a, b, c) ]
@@ -293,17 +296,25 @@ class LatticeMDSystem(MDSystem):
         # Build unit cell from asymmetric unit
         for i, mat in enumerate(matrices):
 
+            print("----------------------------")
+            print(i)
             # Compute TTT matrix
+            print(f"original: {mat}")
             mat = np.matrix(mat)
             shift = np.floor(mat * center_cell)
             mat[:3, 3] -= shift[:3, 0]
             mat[:3, 3] += extra_shift
             mat = basis * mat * basis.I
+            print(f"TTT Matrix:\n {mat}")
             
             # Separate TTT matrix components
             pretransmat = np.array(mat[3, :3].T).reshape(-1)
             rotmat = np.array(mat[:3, :3])
             posttransmat = np.array(mat[:3, 3]).reshape(-1)
+
+            print(f"pretransmat:\n {pretransmat}")
+            print(f"rotation:\n {rotmat}")
+            print(f"posttransmat:\n {posttransmat}")
             
             # Compute new positions
             newpos = pos.copy()
