@@ -90,9 +90,11 @@ def _identifyProblemPairs(mdsystem):
     # Return list of force overflow atoms that are also < 3A from eachother
     # using periodic distance
     positions = state.getPositions(asNumpy=True)[indices]
+    positions = np.array(positions.value_in_unit(nanometers))
+    pos = positions[np.newaxis, :, :]
     vectors = state.getPeriodicBoxVectors()
     dims = internal.unitcell.computeLengthsAndAngles(vectors)
-    neighborhood = np.repeat(positions, 27, axis=0)
+    neighborhood = np.repeat(pos, 27, axis=0)
     cells = [-1, 0, 1]
     transmat = np.array([ uc for uc in product(cells, cells, cells) ])*dims[:3]
     neighborhood += transmat.reshape(27, 1, 3)
