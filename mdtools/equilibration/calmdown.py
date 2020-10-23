@@ -12,7 +12,8 @@ from simtk.openmm import *
 from simtk.openmm.app import *
 import mdtraj
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
+from itertools import product
+from scipy.spatial.distance import cdist
 
 def calmdown(mdsystem, posre=True):
     """
@@ -86,11 +87,18 @@ def _identifyProblemPairs(mdsystem):
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
     indices = np.where(np.isnan(netforces) | (netforces > 1e4))[0]
 
-    # Return list of force overflow atoms that are also < 3A eachother
-    # TO DO: This should really be a periodic distance...
+    # Return list of force overflow atoms that are also < 3A from eachother
+    # using periodic distance
     positions = state.getPositions(asNumpy=True)[indices]
-    dists = squareform(pdist(positions))
-    pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(dists < 0.3)) if i != j ]
+    vectors = state.getPeriodicBoxVectors()
+    dims = internal.unitcell.computeLengthsAndAngles(vectors)
+    neighborhood = np.repeat(positions, 27, axis=0)
+    cells = [-1, 0, 1]
+    transmat = np.array([ uc for uc in product(cells, cells, cells) ])*dims[:3]
+    neighborhood += transmat.reshape(27, 1, 3)
+    dists = np.array([ cdist(positions, neighbor) for neighbor in neighborhood ])
+    minimage_dist = dists.min(axis=0)
+    pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(minimage_dist < 0.3)) if i != j ]
     
     return pairs
     
