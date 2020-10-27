@@ -40,22 +40,22 @@ def calmdown(mdsystem, posre=True):
         If true, position restraints are applied to non-water, non-ion
         heavy atoms in the system.
     """
+    # Build simulation with Brownian dynamics
+    for i in range(10):
+        mdsystem.buildSimulation(ensemble="NVT", posre=posre)
+        problemPairs = _identifyProblemPairs(mdsystem)
+        mdsystem.buildSimulation(integrator=BrownianIntegrator, dt=0.001*attoseconds,
+                                 ensemble="NVT", exceptions=problemPairs, posre=posre,
+                                 constraints=None, rigidWater=False)
+        mdsystem.simulate(10000)
+    mdsystem.minimize()
 
-    # Identify problematic atom pairs
-    mdsystem.buildSimulation(ensemble="NVT", posre=posre)
-    problemPairs = _identifyProblemPairs(mdsystem)
-
-    # Build simulation with Brownian dynamics and exceptions
-    mdsystem.buildSimulation(integrator=BrownianIntegrator, dt=0.001*attoseconds,
-                             ensemble="NVT", exceptions=problemPairs, posre=posre,
-                             constraints=None, rigidWater=False)
-    mdsystem.simulate(10000)
-    
     # Build simulation with Brownian dynamics
     mdsystem.buildSimulation(integrator=BrownianIntegrator, dt=0.001*femtoseconds,
                              ensemble="NVT", posre=posre)
     mdsystem.minimize()
     mdsystem.simulate(10*femtoseconds)
+
 
     # Build simulation with Langevin dynamics
     mdsystem.buildSimulation(integrator=LangevinIntegrator, dt=2*femtoseconds,
@@ -85,9 +85,9 @@ def _identifyProblemPairs(mdsystem):
     state = mdsystem.simulation.context.getState(getPositions=True,
                                                  getForces=True)
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
-    indices = np.where(np.isnan(netforces) | (netforces > 1e4))[0]
+    indices = np.where(np.isnan(netforces) | (netforces > 5e3))[0]
 
-    # Return list of force overflow atoms that are also < 3A from eachother
+    # Return list of force overflow atoms that are also < 5A from eachother
     # using periodic distance
     positions = state.getPositions(asNumpy=True)[indices]
     positions = np.array(positions.value_in_unit(nanometers))
@@ -100,7 +100,7 @@ def _identifyProblemPairs(mdsystem):
     neighborhood += transmat.reshape(27, 1, 3)
     dists = np.array([ cdist(positions, neighbor) for neighbor in neighborhood ])
     minimage_dist = dists.min(axis=0)
-    pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(minimage_dist < 0.3)) if i != j ]
+    pairs = [ (indices[i], indices[j]) for  i, j in zip(*np.where(minimage_dist < 0.5)) if i != j ]
     
     return pairs
     
