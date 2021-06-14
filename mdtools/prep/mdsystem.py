@@ -119,14 +119,14 @@ class MDSystem(Modeller):
                 force.addParticle(int(i), self.positions[i].value_in_unit(nanometers))
             system.addForce(force)
 
-        # Add external electric field
+        # Add external electric field (specified as potential energy)
         if efx:
-            force = CustomExternalForce('(Ex*charge*x)+(Ey*charge*y)+(Ez*charge*z)')
+            force = CustomExternalForce('(-1*Ex*charge*x)+(-1*Ey*charge*y)+(-1*Ez*charge*z)')
             force.addGlobalParameter("Ex", ef[0])
             force.addGlobalParameter("Ey", ef[1])
             force.addGlobalParameter("Ez", ef[2])
             force.addPerParticleParameter("charge")
-            es_forces = system.getForce(3)
+            es_forces = system.getForce(2)
             system.addForce(force)
             for i in self.select(ef_sel):
                 i = int(i)
@@ -134,7 +134,7 @@ class MDSystem(Modeller):
                 force.addParticle(i, [charge])
 
         # Setup exceptions in nonbonded forces if provided
-        nonbonded = system.getForce(3)
+        nonbonded = system.getForce(2)
         for atom1, atom2 in exceptions:
             nonbonded.addException(int(atom1), int(atom2), 0.0, 0.0, 0.0, True)
             
@@ -316,7 +316,7 @@ class MDSystem(Modeller):
             self.buildSimulation()
             remove = True
 
-        force = self.simulation.system.getForce(3)
+        force = self.simulation.system.getForce(2)
         indices = self.select(selection)
         charges = [ force.getParticleParameters(int(i))[0].value_in_unit(elementary_charge) for i in indices ]
 
