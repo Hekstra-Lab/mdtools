@@ -23,6 +23,18 @@ class MDSystem(Modeller):
         Modeller.__init__(self, topology, positions)
         self.forcefield = forcefield
         self.simulation = None
+        self._NonbondedForceIndex = None
+
+    def _getIndexOfNonbondedForce(self, system=None):
+        if not system:
+            system = self.simulation.system
+        if not self._NonbondedForceIndex:
+            for i, force in enumerate(system.getForces()):
+                if isinstance(force, NonbondedForce):
+                    self._NonbondedForceIndex = i
+                    break
+        return self._NonbondedForceIndex        
+
         
     def _toMDTrajTopology(self):
         """
@@ -126,7 +138,7 @@ class MDSystem(Modeller):
             force.addGlobalParameter("Ey", ef[1])
             force.addGlobalParameter("Ez", ef[2])
             force.addPerParticleParameter("charge")
-            es_forces = system.getForce(2)
+            es_forces = system.getForce(self._getIndexOfNonbondedForce(system))
             system.addForce(force)
             for i in self.select(ef_sel):
                 i = int(i)
@@ -134,7 +146,7 @@ class MDSystem(Modeller):
                 force.addParticle(i, [charge])
 
         # Setup exceptions in nonbonded forces if provided
-        nonbonded = system.getForce(2)
+        nonbonded = system.getForce(self._getIndexOfNonbondedForce(system))
         for atom1, atom2 in exceptions:
             nonbonded.addException(int(atom1), int(atom2), 0.0, 0.0, 0.0, True)
             
@@ -316,7 +328,7 @@ class MDSystem(Modeller):
             self.buildSimulation()
             remove = True
 
-        force = self.simulation.system.getForce(2)
+        force = self.simulation.system.getForce(self._getIndexOfNonbondedForce())
         indices = self.select(selection)
         charges = [ force.getParticleParameters(int(i))[0].value_in_unit(elementary_charge) for i in indices ]
 
