@@ -80,7 +80,7 @@ class MDSystem(Modeller):
         mdtrajtop = self._toMDTrajTopology()
         return mdtrajtop.select(selection)
         
-    def buildSimulation(self, integrator=LangevinIntegrator, dt=0.002*picoseconds,
+    def buildSimulation(self, integrator=LangevinMiddleIntegrator, dt=0.002*picoseconds,
                         temperature=298.15*kelvin, ensemble="NPT", posre=False,
                         posre_sel="not water and not (element Na or element Cl) and not element H",
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
