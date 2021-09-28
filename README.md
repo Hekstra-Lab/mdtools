@@ -15,7 +15,7 @@ I have not yet made this package available on PyPI. Until then, `mdtools` can be
 installed locally by cloning the repository and using the included `setup.py`:
 
 ```
-git clone https://github.com/JBGreisman/mdtools.git
+git clone https://github.com/Hekstra-Lab/mdtools.git
 cd mdtools
 conda install -c omnia -c conda-forge openmm
 conda install -c conda-forge mdtraj
