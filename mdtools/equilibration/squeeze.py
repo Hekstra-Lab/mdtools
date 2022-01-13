@@ -15,7 +15,7 @@ from scipy import stats
 import pandas as pd
 import itertools
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds):
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
@@ -24,7 +24,15 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
     targetv = mdsystem.topology.getPeriodicBoxVectors()
     target = np.array(targetv.value_in_unit(nanometers))
     targetvol = np.linalg.det(target)
-    
+
+    # Initial addition or removal of water if required
+    if initial_water_perturb > 0:
+        duplicateWaters(mdsystem, initial_water_perturb)
+        print(f"Initial perturbation +{initial_water_perturb} waters", flush=True)
+    elif initial_water_perturb < 0:
+        deleteWaters(mdsystem, initial_water_perturb)
+        print(f"Initial perturbation -{initial_water_perturb} waters", flush=True)
+
     # Loop until converged
     iteration = 1
     while iteration <= maxIterations:
