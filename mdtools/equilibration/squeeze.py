@@ -16,10 +16,13 @@ import pandas as pd
 import itertools
 
 def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
+    if n_waters == 0:
+        return
     if dn <= 0:
         duplicateWaters(mdsystem, n_waters)
+        return
     while True:
-        if dn >= n_waters:
+        if dn <= n_waters:
             n_waters -= dn
             duplicateWaters(mdsystem, dn)
             mdsystem.calmdown(posre=True)
@@ -29,8 +32,11 @@ def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
             break
 
 def iter_delete_waters(mdsystem, n_waters, dn = 1000):
+    if n_waters == 0:
+        return
     if dn <= 0:
         deleteWaters(mdsystem, n_waters)
+        return
     while True:
         if dn >= n_waters:
             n_waters -= dn
@@ -121,14 +127,15 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         # Revert positions and box vectors
         mdsystem.positions = startingPositions*nanometers
         mdsystem.topology.setPeriodicBoxVectors(targetv)
+        print("Reverted atom positions and box vectors")
 
         # Add or delete waters
         numWaters = np.floor(np.abs(change)/0.05)
         if change > 0.0:
-            iter_duplicate_waters(mdsystem, int(numWaters), dn)
+            iter_duplicate_waters(mdsystem, numWaters, dn)
             print(f"+{numWaters} waters", flush=True)
         else:
-            iter_delete_waters(mdsystem, int(numWaters), dn)
+            iter_delete_waters(mdsystem, numWaters, dn)
             print(f"-{numWaters} waters", flush=True)
 
         # Increment iteration
