@@ -28,7 +28,6 @@ def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
             mdsystem.calmdown(posre=True)
         else:
             duplicateWaters(mdsystem, n_waters)
-            mdsystem.calmdown(posre=True)
             break
 
 def iter_delete_waters(mdsystem, n_waters, dn = 1000):
