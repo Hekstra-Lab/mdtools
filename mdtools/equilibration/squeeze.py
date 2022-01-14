@@ -55,8 +55,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         iter_duplicate_waters(mdsystem, initial_water_perturb, dn)
         print(f"Initial perturbation +{initial_water_perturb} waters", flush=True)
     elif initial_water_perturb < 0:
-        iter_delete_waters(mdsystem, initial_water_perturb, dn)
-        print(f"Initial perturbation -{initial_water_perturb} waters", flush=True)
+        iter_delete_waters(mdsystem, -initial_water_perturb, dn)
+        print(f"Initial perturbation -{-initial_water_perturb} waters", flush=True)
 
     # Loop until converged
     iteration = 1
