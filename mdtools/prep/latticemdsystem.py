@@ -329,7 +329,8 @@ class LatticeMDSystem(MDSystem):
         else:
             return unitcell
 
-    def squeeze(self, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds):
+    def squeeze(self, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0):
         return squeeze.squeeze(self, tolerance=tolerance,
                                maxIterations=maxIterations,
-                               maxSimtime=maxSimtime)
+                               maxSimtime=maxSimtime,
+                               initial_water_perturb=initial_water_perturb)
