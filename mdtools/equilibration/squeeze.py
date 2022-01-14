@@ -37,7 +37,7 @@ def iter_delete_waters(mdsystem, n_waters, dn = 1000):
         deleteWaters(mdsystem, n_waters)
         return
     while True:
-        if dn >= n_waters:
+        if dn <= n_waters:
             n_waters -= dn
             deleteWaters(mdsystem, dn)
             mdsystem.calmdown(posre=True)
