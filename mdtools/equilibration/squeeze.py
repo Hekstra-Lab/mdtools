@@ -15,7 +15,32 @@ from scipy import stats
 import pandas as pd
 import itertools
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0):
+def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
+    if dn <= 0:
+        duplicateWaters(mdsystem, n_waters)
+    while True:
+        if dn >= n_waters:
+            n_waters -= dn
+            duplicateWaters(mdsystem, dn)
+            mdsystem.calmdown(posre=True)
+        else:
+            duplicateWaters(mdsystem, n_waters)
+            mdsystem.calmdown(posre=True)
+            break
+
+def iter_delete_waters(mdsystem, n_waters, dn = 1000):
+    if dn <= 0:
+        deleteWaters(mdsystem, n_waters)
+    while True:
+        if dn >= n_waters:
+            n_waters -= dn
+            deleteWaters(mdsystem, dn)
+            mdsystem.calmdown(posre=True)
+        else:
+            deleteWaters(mdsystem, n_waters)
+            break
+
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0, dn = 0):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
@@ -27,10 +52,10 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
 
     # Initial addition or removal of water if required
     if initial_water_perturb > 0:
-        duplicateWaters(mdsystem, initial_water_perturb)
+        iter_duplicate_waters(mdsystem, initial_water_perturb, dn)
         print(f"Initial perturbation +{initial_water_perturb} waters", flush=True)
     elif initial_water_perturb < 0:
-        deleteWaters(mdsystem, initial_water_perturb)
+        iter_delete_waters(mdsystem, initial_water_perturb, dn)
         print(f"Initial perturbation -{initial_water_perturb} waters", flush=True)
 
     # Loop until converged
@@ -100,10 +125,10 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         # Add or delete waters
         numWaters = np.floor(np.abs(change)/0.05)
         if change > 0.0:
-            duplicateWaters(mdsystem, int(numWaters))
+            iter_duplicate_waters(mdsystem, int(numWaters), dn)
             print(f"+{numWaters} waters", flush=True)
         else:
-            deleteWaters(mdsystem, int(numWaters))
+            iter_delete_waters(mdsystem, int(numWaters), dn)
             print(f"-{numWaters} waters", flush=True)
 
         # Increment iteration
