@@ -131,10 +131,10 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         # Add or delete waters
         numWaters = np.floor(np.abs(change)/0.05)
         if change > 0.0:
-            iter_duplicate_waters(mdsystem, numWaters, dn)
+            iter_duplicate_waters(mdsystem, int(numWaters), dn)
             print(f"+{numWaters} waters", flush=True)
         else:
-            iter_delete_waters(mdsystem, numWaters, dn)
+            iter_delete_waters(mdsystem, int(numWaters), dn)
             print(f"-{numWaters} waters", flush=True)
 
         # Increment iteration
