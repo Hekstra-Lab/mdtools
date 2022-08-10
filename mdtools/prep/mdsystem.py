@@ -97,7 +97,7 @@ class MDSystem(Modeller):
                         posre_sel="not water and not (element Na or element Cl) and not element H",
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
-                        filePrefix="traj", saveTrajectory=False, trajInterval=500,
+                        filePrefix="traj", saveTrajectory=False, trajInterval=500, saveVelocities=False,
                         saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True):
         """
         Build a simulation context from the system. The simulation is
@@ -165,7 +165,7 @@ class MDSystem(Modeller):
         
         # Add reporters
         if saveTrajectory:
-            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset))
+            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, velocities=saveVelocities))
         if saveStateData:
             self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
         
@@ -232,7 +232,7 @@ class MDSystem(Modeller):
         dt = self.simulation.integrator.getStepSize()
         return int(np.ceil(chemtime / dt))
         
-    def simulate(self, n, outputStartingFrame=True):
+    def simulate(self, n, outputStartingFrame=True, reportLargeForceThreshold=-1):
         """
         Simulate the system for the given number of steps. If n is a 
         simtk.Unit of time, the number of steps are chosen to simulate
@@ -244,6 +244,10 @@ class MDSystem(Modeller):
             Number of steps or chemical time of simulation
         outputStartingFrame : bool
             Whether to output the initial frame of a simulation
+        reportLargeForceThreshold : int
+            If <= 0, will not report; otherwise, print a list of
+            all atoms with net forces on them exceeding the
+            threshold in magnitude
         """
         # If simulation step is 0, output the starting configuration
         if self.simulation.currentStep == 0 and outputStartingFrame:
@@ -257,7 +261,16 @@ class MDSystem(Modeller):
             self.simulation.step(n)
         else:
             self.simulation.step(self._time2steps(n))
-                
+
+        # Optionally report large forces
+        if reportLargeForceThreshold > 0:
+            state = self.simulation.context.getState(getForces=True)
+            netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
+            indices = np.where(np.isnan(netforces) | (netforces > reportLargeForceThreshold))[0]
+            atoms = list(self.topology.atoms())
+            print("The following atoms experience large net forces exceeding the threshold", reportLargeForceThreshold)
+            [print(f"{atoms[idx]}, net F = {netforces[idx]}") for idx in indices]
+
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
         self.positions = state.getPositions()
@@ -265,7 +278,7 @@ class MDSystem(Modeller):
         
         return self
 
-    def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
+    def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True, reportLargeForceThreshold=-1):
         """
         Minimizes and equilibrate an MDSystem object. If position restraints
         are applied, it will taper the restraints over the course of the 
@@ -280,8 +293,12 @@ class MDSystem(Modeller):
             Temperature to use to initialize velocities
         posre : bool
             If True, position restraints have been applied to simulation object
+        reportLargeForceThreshold : int
+            If <= 0, will not report; otherwise, print a list of
+            all atoms with net forces on them exceeding the
+            threshold in magnitude
         """
-        return equilibrate.equilibrate(self, simtime, temperature, posre)
+        return equilibrate.equilibrate(self, simtime, temperature, posre, reportLargeForceThreshold=reportLargeForceThreshold)
 
     def calmdown(self, posre=True):
         """

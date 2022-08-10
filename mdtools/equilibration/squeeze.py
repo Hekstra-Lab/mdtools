@@ -74,7 +74,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration:02d}",
                                  saveTrajectory=True, saveStateData=True,
                                  trajInterval=1000, stateDataInterval=1000,
-				 dt=dt)
+				                 dt=dt)
 
         # Save initial positions
         state = mdsystem.simulation.context.getState(getPositions=True)
