@@ -45,7 +45,7 @@ def iter_delete_waters(mdsystem, n_waters, dn = 1000):
             deleteWaters(mdsystem, n_waters)
             break
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0, dn = 0):
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0, dn = 0, dt=0.002*picoseconds):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
@@ -73,7 +73,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         # Build simulation
         mdsystem.buildSimulation(ensemble="NPT", posre=True, filePrefix=f"iter{iteration:02d}",
                                  saveTrajectory=True, saveStateData=True,
-                                 trajInterval=1000, stateDataInterval=1000)
+                                 trajInterval=1000, stateDataInterval=1000,
+				 dt=dt)
 
         # Save initial positions
         state = mdsystem.simulation.context.getState(getPositions=True)
