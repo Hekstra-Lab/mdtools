@@ -45,15 +45,18 @@ def iter_delete_waters(mdsystem, n_waters, dn = 1000):
             deleteWaters(mdsystem, n_waters)
             break
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0, dn = 0, dt=0.002*picoseconds):
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds,
+            initial_water_perturb = 0, dn = 0, dt=0.002*picoseconds,
+            targetvol=0):
     """
     Squeeze run to titrate the number of waters in a lattice MD system
     in order to maintain desired periodic box vectors
     """
     # Target periodic box vectors
-    targetv = mdsystem.topology.getPeriodicBoxVectors()
-    target = np.array(targetv.value_in_unit(nanometers))
-    targetvol = np.linalg.det(target)
+    if targetvol==0:
+        targetv = mdsystem.topology.getPeriodicBoxVectors()
+        target = np.array(targetv.value_in_unit(nanometers))
+        targetvol = np.linalg.det(target)
 
     # Initial addition or removal of water if required
     if initial_water_perturb > 0:
