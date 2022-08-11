@@ -93,7 +93,7 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
         # Otherwise, simulate more, and assess convergence
         else:
             mdsystem.simulate(maxSimtime - 2.0*nanoseconds)
-            steps = int(np.ceil(maxSimtime/(2000*femtoseconds))) - 750
+            steps = int(np.ceil(maxSimtime/dt)) - 750
             vol, sem, std = _computeVolumeStats(f"iter{iteration:02d}.csv", steps)
             change = targetvol - vol
             
