@@ -53,6 +53,8 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
     in order to maintain desired periodic box vectors
     """
     # Target periodic box vectors
+    targetv = mdsystem.topology.getPeriodicBoxVectors()
+
     if targetvol==0:
         targetv = mdsystem.topology.getPeriodicBoxVectors()
         target = np.array(targetv.value_in_unit(nanometers))
