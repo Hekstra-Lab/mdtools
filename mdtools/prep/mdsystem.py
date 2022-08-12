@@ -98,7 +98,8 @@ class MDSystem(Modeller):
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500, saveVelocities=False,
-                        saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True):
+                        saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True,
+                        hydrogenMass=1*amu):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
@@ -115,7 +116,8 @@ class MDSystem(Modeller):
         # Build system
         system = self.forcefield.createSystem(self.topology, nonbondedMethod=nonbondedMethod, 
                                               nonbondedCutoff=nonbondedCutoff, 
-                                              constraints=constraints, rigidWater=rigidWater)
+                                              constraints=constraints, rigidWater=rigidWater,
+                                              hydrogenMass=hydrogenMass)
 
         # Setup MD simulation
         integrator = integrator(temperature, 1/picosecond, dt)
