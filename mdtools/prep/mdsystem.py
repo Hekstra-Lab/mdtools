@@ -24,6 +24,7 @@ class MDSystem(Modeller):
         self.forcefield = forcefield
         self.simulation = None
         self._NonbondedForceIndex = None
+        self._more_reporters = False
 
     def _getIndexOfNonbondedForce(self, system=None):
         if not system:
@@ -99,7 +100,7 @@ class MDSystem(Modeller):
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
                         filePrefix="traj", saveTrajectory=False, trajInterval=500, saveVelocities=False,
                         saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True,
-                        hydrogenMass=1*amu):
+                        hydrogenMass=1*amu, reporters=None):
         """
         Build a simulation context from the system. The simulation is
         then available as an attribute.
@@ -166,11 +167,18 @@ class MDSystem(Modeller):
             self.thermalize(temperature=temperature)
         
         # Add reporters
-        if saveTrajectory:
-            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, velocities=saveVelocities))
-        if saveStateData:
-            self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
-        
+        # We extend its functionality to allow adding multiple reporters,
+        # and each reporter can have a different offset when it starts collecting data
+        if reporters is None:
+            if saveTrajectory:
+                self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, velocities=saveVelocities))
+            if saveStateData:
+                self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+            self._more_reporters = False
+        else: # we assume it is a list of tuples (filePrefix, offset, trajInterval, stateDataInterval, atomSubset)
+            self.reporters = reporters
+            self._more_reporters = True
+
         return self
 
     def thermalize(self, temperature, randomSeed=None):
@@ -230,9 +238,12 @@ class MDSystem(Modeller):
         """
         Compute the number of steps corresponding to a given chemical time
         """
-        chemtime = time.in_units_of(picoseconds)
-        dt = self.simulation.integrator.getStepSize()
-        return int(np.ceil(chemtime / dt))
+        if isinstance(time, int):
+            return time
+        else:
+            chemtime = time.in_units_of(picoseconds)
+            dt = self.simulation.integrator.getStepSize()
+            return int(np.ceil(chemtime / dt))
         
     def simulate(self, n, outputStartingFrame=True, reportLargeForceThreshold=-1):
         """
@@ -251,18 +262,34 @@ class MDSystem(Modeller):
             all atoms with net forces on them exceeding the
             threshold in magnitude
         """
+
         # If simulation step is 0, output the starting configuration
         if self.simulation.currentStep == 0 and outputStartingFrame:
             for reporter in self.simulation.reporters:
                 report = reporter.describeNextReport(self.simulation)
                 state  = self.simulation.context.getState(*report[1:])
                 reporter.report(self.simulation, state)
-
-        # Run simulation
-        if isinstance(n, int):
-            self.simulation.step(n)
-        else:
-            self.simulation.step(self._time2steps(n))
+        n = self._time2steps(n)
+        while n > 0:
+            if self._more_reporters:
+                next_offset = self._time2steps(self.reporters[0][1])
+                n_steps = min(n, next_offset - self.simulation.currentStep)
+                self.simulation.step(n_steps)
+                print(next_offset, self.simulation.currentStep, n_steps)
+                # Append new reporter to the list of reporters attached to the simulation if necessary
+                filePrefix, offset, trajInterval, stateDataInterval, atomSubset = self.reporters.pop(0)
+                # Requires rebuilding mdtraj
+                if trajInterval > 0:
+                    self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, startTime=self.simulation.currentStep))
+                # This doesn't work as it currently stands!
+                if stateDataInterval > 0:
+                    self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+                if len(self.reporters) == 0:
+                    self._more_reporters = False
+                n -= n_steps
+            else:
+                self.simulation.step(n)
+                n = 0
 
         # Optionally report large forces
         if reportLargeForceThreshold > 0:
