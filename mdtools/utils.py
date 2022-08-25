@@ -64,7 +64,7 @@ def plot_RMSD_by_chain_stat(avg_rmsd, std_rmsd, rule, n_frames):
     plt.legend(loc = 'upper right')
 
 def unwrap_atom_axis(traj):
-    L = traj.unitcell_lengths[0]
+    L_arr = traj.unitcell_lengths[0]
     for i in range(3):
         L=L_arr[i]
         eps=L/2 #nm
@@ -75,7 +75,7 @@ def unwrap_atom_axis(traj):
         traj.xyz[:,:,i] = xi_corr
 
 def unwrap_time_axis(traj, selection='all'):
-    L = traj.unitcell_lengths[0]
+    L_arr = traj.unitcell_lengths[0]
     if selection == 'all':
         selection = np.arange(traj.xyz.shape[1])
     for i in range(3):
@@ -230,3 +230,9 @@ def average_structure_factors(input_name):
     dataset[:] = np.stack([np.abs(complex_reflections), np.angle(complex_reflections) / np.pi * 180]).T
     dataset.infer_mtz_dtypes(inplace = True)
     dataset.write_mtz(f"{input_name}_avg.mtz")
+
+def compute_net_dipole_moment(traj):
+    com = mdtraj.compute_center_of_mass(traj)
+    xyz_minus_com = traj.xyz - com[:,None,:]
+    net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
+    return net_dipole
