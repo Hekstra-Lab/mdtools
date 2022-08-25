@@ -7,7 +7,10 @@ import gemmi
 from typing import List
 import reciprocalspaceship as rs
 import sys, os, getopt
-
+###
+from mdtraj.formats.hdf5 import *
+from mdtraj.utils import in_units_of
+from mdtraj.core.trajectory import Trajectory
 
 def getFieldStrength(e):
     """
@@ -236,3 +239,11 @@ def compute_net_dipole_moment(traj):
     xyz_minus_com = traj.xyz - com[:,None,:]
     net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
     return net_dipole
+
+def save_hdf5(self, filename, force_overwrite=True, mode='w'):
+    with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
+                f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                        time=self.time,
+                        cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                        cell_angles=self.unitcell_angles)
+                f.topology = self.topology
