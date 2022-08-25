@@ -245,20 +245,29 @@ def average_structure_factors(input_name):
     dataset.infer_mtz_dtypes(inplace = True)
     dataset.write_mtz(f"{input_name}_avg.mtz")
 
-def generate_flexible_function(f, writer, *args, **kwargs):
-    """
-    Transforms f(*args, **kwargs) -> ret to
-               f_flex(input, output) -> None / ret'
-    """
-
-    return
-def compute_net_dipole_moment(traj, input=None, output=None):
-    def core(traj):
-        com = mdtraj.compute_center_of_mass(traj)
-        xyz_minus_com = traj.xyz - com[:,None,:]
-        net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
-        return net_dipole
-    if isinstance(input, list):
-        if output
-
-    else
+# def generate_flexible_function(f, writer, *args, **kwargs):
+#     """
+#     Transforms f(*args, **kwargs) -> ret to
+#                f_flex(input, output) -> None / ret'
+#     """
+#     def f_flex(input, output):
+#         if isinstance(input, list):
+#             if isinstance(output, list) and len(output) == len(input):
+#                 [writer(f(i, args, kwargs), o) for i, o in zip(input, output)]
+#             elif output is None:
+#                 return [f(i, args, kwargs) for i in input]
+#             else:
+#                 writer(f(i, args, kwargs))
+#
+#
+#     return
+# def compute_net_dipole_moment(traj, input=None, output=None):
+#     def core(traj):
+#         com = mdtraj.compute_center_of_mass(traj)
+#         xyz_minus_com = traj.xyz - com[:,None,:]
+#         net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
+#         return net_dipole
+#     if isinstance(input, list):
+#         if output
+#
+#     else
