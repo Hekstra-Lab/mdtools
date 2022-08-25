@@ -196,7 +196,7 @@ def align_and_split_by_chain(traj, output_name, unitcell_ref, asu_ref, chainwise
         subtraj = traj.atom_slice(top.select(f"chainid == {chain_id}"))
         if chainwise_alignment:
             subtraj.superpose(asu_ref, atom_indices=atom_selection)
-        subtraj.save_hdf5(f"{output_name}_subtraj_{chain_id}.h5", force_overwrite=False)
+        subtraj.save_hdf5(f"{output_name}_subtraj_{chain_id}.h5", mode='a')
 
 def save_snapshots_from_traj(target_traj, output_name, frame_offset, d_frame):
     for i, frame in enumerate(target_traj[frame_offset::d_frame]):
