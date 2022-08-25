@@ -12,6 +12,17 @@ from mdtraj.formats.hdf5 import *
 from mdtraj.utils import in_units_of
 from mdtraj.core.trajectory import Trajectory
 
+def save_hdf5(self, filename, force_overwrite=True, mode='w'):
+    with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
+                f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
+                        time=self.time,
+                        cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                        cell_angles=self.unitcell_angles)
+                f.topology = self.topology
+
+def _save_traj(traj, fname):
+    save_hdf5(traj, filename, force_overwrite=False, mode='a')
+
 def getFieldStrength(e):
     """
     Convert from given unit of electric field strength to a value
@@ -196,7 +207,7 @@ def align_and_split_by_chain(traj, output_name, unitcell_ref, asu_ref, chainwise
         subtraj = traj.atom_slice(top.select(f"chainid == {chain_id}"))
         if chainwise_alignment:
             subtraj.superpose(asu_ref, atom_indices=atom_selection)
-        subtraj.save_hdf5(f"{output_name}_subtraj_{chain_id}.h5", mode='a')
+        _save_traj(subtraj, f"{output_name}_subtraj_{chain_id}.h5")
 
 def save_snapshots_from_traj(target_traj, output_name, frame_offset, d_frame):
     for i, frame in enumerate(target_traj[frame_offset::d_frame]):
@@ -234,16 +245,20 @@ def average_structure_factors(input_name):
     dataset.infer_mtz_dtypes(inplace = True)
     dataset.write_mtz(f"{input_name}_avg.mtz")
 
-def compute_net_dipole_moment(traj):
-    com = mdtraj.compute_center_of_mass(traj)
-    xyz_minus_com = traj.xyz - com[:,None,:]
-    net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
-    return net_dipole
+def generate_flexible_function(f, writer, *args, **kwargs):
+    """
+    Transforms f(*args, **kwargs) -> ret to
+               f_flex(input, output) -> None / ret'
+    """
 
-def save_hdf5(self, filename, force_overwrite=True, mode='w'):
-    with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
-                f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                        time=self.time,
-                        cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
-                        cell_angles=self.unitcell_angles)
-                f.topology = self.topology
+    return
+def compute_net_dipole_moment(traj, input=None, output=None):
+    def core(traj):
+        com = mdtraj.compute_center_of_mass(traj)
+        xyz_minus_com = traj.xyz - com[:,None,:]
+        net_dipole = np.sum(xyz_minus_com * partial_charges[None, :, None], axis=1)
+        return net_dipole
+    if isinstance(input, list):
+        if output
+
+    else
