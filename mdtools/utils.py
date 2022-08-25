@@ -245,27 +245,27 @@ def average_structure_factors(input_name):
     dataset.infer_mtz_dtypes(inplace = True)
     dataset.write_mtz(f"{input_name}_avg.mtz")
 
-def generate_flexible_fun(f, writer, *args, **kwargs):
+def generate_flexible_fun(f, reader, writer):
     """
-    Transforms f(input, args : list, kwargs : dict) -> ret
-            to f_flex(input, output)                -> None / ret'
+    Transforms f(input)                                      -> retval
+            to f_flex(generalized_input, generalized_output) -> None / retval'
     """
     def f_flex(input, output):
         if isinstance(input, list):
             if isinstance(output, list) and len(output) == len(input):
-                [writer(f(i, args, kwargs), o) for i, o in zip(input, output)]
+                [writer(f(reader(i)), o) for i, o in zip(input, output)]
             elif output is None:
-                return [f(i, args, kwargs) for i in input]
+                return [f(reader(i)) for i in input]
             else:
-                writer([f(i, args, kwargs) for i in input], output)
+                writer([f(reader(i)) for i in input], output)
         else:
             if output is None:
-                return f(input, args, kwargs)
+                return f(input)
             else:
-                writer(f(i, args, kwargs), output)
+                writer(f(reader(i)), output)
     return f_flex
 
-def compute_net_dipole_moment(traj, input=None, output=None):
+def compute_net_dipole_moment(partial_charges, input=None, output=None):
     def core(traj, args=None, kwargs=None):
         com = mdtraj.compute_center_of_mass(traj)
         xyz_minus_com = traj.xyz - com[:,None,:]
@@ -273,5 +273,9 @@ def compute_net_dipole_moment(traj, input=None, output=None):
         return net_dipole
     def writer(arr, output_name):
         np.save(output_name, arr)
-    return (generate_flexible_fun(core, writer))(input, output)
+    def reader(input):
+        if isinstance(input, str):
+            return mdtraj.load(input)
+        return input
+    return (generate_flexible_fun(core, reader, writer))(input, output)
 
