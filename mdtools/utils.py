@@ -229,14 +229,13 @@ def batch_fmodel(input_name, max_frame, resolution=1.5,
     for frame_id in range(max_frame):
         ret = subprocess.run(phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}', shell=True)
 
-def average_structure_factors(input_name):
+def average_structure_factors(input_name, max_frame):
     dataset = rs.read_mtz(f"{input_name}_0.pdb.mtz")
     n_reflections = dataset.shape[0]
-    n_frames = 100
 
     complex_reflections = np.zeros(n_reflections, dtype='complex128')
 
-    for frame in range(n_frames):
+    for frame in range(max_frame):
         dataset = rs.read_mtz(f"{input_name}_{frame}.pdb.mtz")
         complex_reflections = complex_reflections * (1 - 1/(frame + 1)) + np.array([amp*np.exp(np.pi*phase/180 * 1j) for [amp, phase] in dataset.to_numpy()]) / (frame + 1)
 
