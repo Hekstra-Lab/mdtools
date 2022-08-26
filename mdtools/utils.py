@@ -6,7 +6,7 @@ from numpy.linalg import inv, norm, det
 import gemmi
 from typing import List
 import reciprocalspaceship as rs
-import sys, os, getopt
+import sys, os, getopt, subprocess
 ###
 from mdtraj.formats.hdf5 import *
 from mdtraj.utils import in_units_of
@@ -227,7 +227,7 @@ def batch_annotate_spacegroup(input_name, max_frame, sg):
 def batch_fmodel(input_name, max_frame, resolution=1.5,
                  phenix_command='source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel'):
     for frame_id in range(max_frame):
-        os.system(phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}')
+        ret = subprocess.run(phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}')
 
 def average_structure_factors(input_name):
     dataset = rs.read_mtz(f"{input_name}_0.pdb.mtz")
