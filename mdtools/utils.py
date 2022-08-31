@@ -11,6 +11,7 @@ import sys, os, getopt, subprocess
 from mdtraj.formats.hdf5 import *
 from mdtraj.utils import in_units_of
 from mdtraj.core.trajectory import Trajectory
+import itertools
 
 def save_hdf5(self, filename, force_overwrite=True, mode='w'):
     with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
@@ -279,3 +280,29 @@ def compute_net_dipole_moment(partial_charges, input=None, output=None):
         return input
     return (generate_flexible_fun(core, reader, writer))(input, output)
 
+def mtz_to_cartesian_arr(mtz):
+    return np.array([amp*np.exp(np.pi*phase/180 * 1j) for [amp, phase] in mtz.to_numpy()])
+
+def cartesian_arr_to_polar(arr):
+    return np.stack([np.abs(arr), np.angle(arr) / np.pi * 180]).T
+
+def compute_all_difference_maps(file_name, n_chains=4, phases=['pos', 'zero', 'neg']):
+    # calculate internal diff map for all phases and pairs
+    for phase in phases:
+        for pair in itertools.combinations(range(n_chains), 2):
+            chain_id_1, chain_id_2 = pair
+            dataset1 = rs.read_mtz(f'{file_name}_chainwise_{phase}_subtraj_{chain_id_1}_avg.mtz')
+            dataset2 = rs.read_mtz(f'{file_name}_chainwise_{phase}_subtraj_{chain_id_2}_avg.mtz')
+            dataset1[:] = cartesian_arr_to_polar(mtz_to_cartesian_arr(dataset1) - mtz_to_cartesian_arr(dataset2))
+            dataset1.infer_mtz_dtypes(inplace = True)
+            dataset1.write_mtz(f'{file_name}_diff_{phase}_{chain_id_1}_{chain_id_2}.mtz')
+
+    # calculate ordinary diff map for all phases and chains:
+    for phase_pair in itertools.combinations(phases, 2):
+        phase_1, phase_2 = phase_pair
+        for chain_id in range(n_chains):
+            dataset1 = rs.read_mtz(f'{file_name}_chainwise_{phase_1}_subtraj_{chain_id}_avg.mtz')
+            dataset2 = rs.read_mtz(f'{file_name}_chainwise_{phase_1}_subtraj_{chain_id}_avg.mtz')
+            dataset1[:] = cartesian_arr_to_polar(mtz_to_cartesian_arr(dataset1) - mtz_to_cartesian_arr(dataset2))
+            dataset1.infer_mtz_dtypes(inplace = True)
+            dataset1.write_mtz(f'{file_name}_diff_{chain_id}_{phase_1}_{phase_2}.mtz')
