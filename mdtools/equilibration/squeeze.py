@@ -184,7 +184,8 @@ def duplicateWaters(mdsystem, numWaters):
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select n random waters to duplicate
-    randwaters = np.random.choice(chain.n_residues, min(numWaters, chain.n_residues), replace=False)
+    water_idxs = [i for i in range(chain.n_residues) if chain.residue(i).name == "HOH"] # this avoids grabbing nonwater residues
+    randwaters = np.random.choice(water_idxs, min(numWaters, chain.n_residues), replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
@@ -211,7 +212,8 @@ def deleteWaters(mdsystem, numWaters):
     chain = mdtrajtop.chain(np.argmax(watercounts))
 
     # Select n random waters to delete
-    randwaters = np.random.choice(chain.n_residues, min(numWaters, chain.n_residues), replace=False)
+    water_idxs = [i for i in range(chain.n_residues) if chain.residue(i).name == "HOH"] # this avoids grabbing nonwater residues
+    randwaters = np.random.choice(water_idxs, min(numWaters, chain.n_residues), replace=False)
     residues   = [ chain.residue(i) for i in randwaters ]
     atoms = itertools.chain(*[ r.atoms for r in residues ])
     atomindices  = [ a.index for a in atoms ]
