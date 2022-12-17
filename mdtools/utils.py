@@ -302,7 +302,7 @@ def compute_all_difference_maps(file_name, n_chains=4, phases=['pos', 'zero', 'n
         phase_1, phase_2 = phase_pair
         for chain_id in range(n_chains):
             dataset1 = rs.read_mtz(f'{file_name}_chainwise_{phase_1}_subtraj_{chain_id}_avg.mtz')
-            dataset2 = rs.read_mtz(f'{file_name}_chainwise_{phase_1}_subtraj_{chain_id}_avg.mtz')
+            dataset2 = rs.read_mtz(f'{file_name}_chainwise_{phase_2}_subtraj_{chain_id}_avg.mtz')
             dataset1[:] = cartesian_arr_to_polar(mtz_to_cartesian_arr(dataset1) - mtz_to_cartesian_arr(dataset2))
             dataset1.infer_mtz_dtypes(inplace = True)
             dataset1.write_mtz(f'{file_name}_diff_{chain_id}_{phase_1}_{phase_2}.mtz')
