@@ -56,7 +56,7 @@ def compute_RMSD_by_chain(target_traj, top, rule, chain_id_list = None):
 def plot_RMSD_by_chain(chains_rmsd, rule, n_frames):
     plt.figure(figsize=(18, 12))
     plt.rc('font', size=16)
-    plt.title("PDZ domain RMSD by chain (rule: {})".format(rule))
+    plt.title("RMSD by chain (rule: {})".format(rule))
     plt.xlabel("Time (ns)")
     plt.xticks(np.arange(0, n_frames, 100), np.arange(0, n_frames,100) / 10)
     plt.ylabel("RMSD (nm)")
@@ -69,7 +69,7 @@ def plot_RMSD_by_chain(chains_rmsd, rule, n_frames):
 def plot_RMSD_by_chain_stat(avg_rmsd, std_rmsd, rule, n_frames):
     plt.figure(figsize=(18, 12))
     plt.rc('font', size=16)
-    plt.title("PDZ domain RMSD by chain (rule: {})".format(rule))
+    plt.title("RMSD by chain (rule: {})".format(rule))
     plt.xlabel("Time (ns)")
     plt.xticks(np.arange(0, n_frames, 100), np.arange(0, n_frames,100) / 10)
     plt.ylabel("RMSD (nm)")
@@ -226,9 +226,11 @@ def batch_annotate_spacegroup(input_name, max_frame, sg):
         struct.write_pdb(f"{input_name}_{frame_id}.pdb")
 
 def batch_fmodel(input_name, max_frame, resolution=1.5,
-                 phenix_command='source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel'):
+                 phenix_command='source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel', 
+                 output_path=None):
     for frame_id in range(max_frame):
-        ret = subprocess.run(phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}',
+            subprocess.run(('' if output_path is None else f'cd {output_path};') +\
+                            phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}',
                              shell=True, stdout=subprocess.DEVNULL)
 
 def average_structure_factors(input_name, max_frame):
