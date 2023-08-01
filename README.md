@@ -6,8 +6,7 @@ OpenMM's funcitonality by facilitating common use cases with sensible default
 parameter values. With `mdtools`, you can run an MD simulation of a protein in a
 waterbox or the unit cell from a crystal structure with just a few lines of Python code.
 
-For now, this repo is very much targeted to my current use cases, which is centered
-around comparing MD simulations to crystallographic data.
+For now, this repo is very much targeted to my current use cases, which is centered around comparing MD simulations to crystallographic data.
 
 # Installation
 
@@ -17,13 +16,37 @@ installed locally by cloning the repository and using the included `setup.py`:
 ```
 git clone https://github.com/Hekstra-Lab/mdtools.git
 cd mdtools
-conda install -c omnia -c conda-forge openmm
-conda install -c conda-forge mdtraj
 python setup.py install
 ```
 
-Note (from Ziyuan): I have added the requirements for `openmm` and `mdtraj` in 
-`setup.py` but haven't tested it.
+However, one would need to pre-install the following packages as specified in `conda-recipe/meta.yaml`:
+
+```
+- openmm>=7
+- reciprocalspaceship=1.0.0 
+- gemmi 
+- mdtraj
+- matplotlib
+```
+
+For example, openmm and mdtraj could be installed from conda:
+```
+conda install -c omnia -c conda-forge openmm
+conda install -c conda-forge mdtraj
+```
+
+Alternative, build the package by yourself and install all the above dependencies automatically with Conda:
+```
+conda create -n NEW_CONDA_ENV_NAME python=DESIRED_PYTHON_VERSION # >=3.7 
+conda activate NEW_CONDA_ENV_NAME
+conda build . --python=DESIRED_PYTHON_VERSION #choose from 3.7, 3.8, 3.9, 3.10, 3.11
+conda install --use-local mdtools
+```
+
+Note: building the package could be very slow in vanilla Conda due to the many dependencies that need to be resolved. Please consider installing [boa](https://github.com/mamba-org/boa) and use `conda mambabuild` for a immense speed-up. Also, use `mamba install` instead of `conda install` for additional speed-up.
+
+<!-- Note (from Ziyuan): I have added the requirements for `openmm` and `mdtraj` in 
+`setup.py` but haven't tested it. -->
 
 
 # Examples
@@ -32,6 +55,7 @@ Example scripts that make use of the provided libraries will be found in the
 examples directory (Stay tuned).
 
 # Changelog
+* Added and reformatted many docstrings for extensive documentation purpose.
 * Added many utility functions in `mdtools.utils` for performing post-simulation
 analyses on crystal MD systems.
 * Support saving velocities and other data through additional reporters in 

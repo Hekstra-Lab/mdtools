@@ -15,9 +15,6 @@ setup(
     packages=find_packages(),
     description='Tools for running MD simulation in OpenMM',
     install_requires=[
-        "numpy >= 1.6",
-        "reciprocalspaceship",
-        "mdtraj",
-        "openmm"
+        "numpy >= 1.6"
     ],
 )

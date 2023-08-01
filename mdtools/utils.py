@@ -559,7 +559,7 @@ def compute_net_dipole_moment(partial_charges: np.ndarray,
         return input
     return (_generate_flexible_fun(core, reader, writer))(input, output)
 
-def mtz_to_cartesian_arr(mtz: rs.Dataset):
+def mtz_to_cartesian_arr(mtz: rs.DataSet):
     """Convert structure factors from complex to Cartesian representation
     """
     return np.array([amp*np.exp(np.pi*phase/180 * 1j) for [amp, phase] in mtz.to_numpy()])
