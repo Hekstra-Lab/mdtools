@@ -5,7 +5,7 @@ Author: Jack Greisman <greisman@g.harvard.edu>
         Ziyuan Zhao   <ziyuanzhao@fas.harvard.edu>
 """
 __author__  = "Jack Greisman"
-__version__ = "1.0"
+__version__ = "1.1"
 
 from simtk.unit import *
 from simtk.openmm import *

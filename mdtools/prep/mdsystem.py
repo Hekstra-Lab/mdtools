@@ -2,9 +2,10 @@
 mdsystem.py: Extends Modeller class from OpenMM with useful methods
 
 Author: Jack Greisman <greisman@g.harvard.edu>
+        Ziyuan Zhao   <ziyuanzhao@fas.harvard.edu>
 """
 __author__  = "Jack Greisman"
-__version__ = "1.0"
+__version__ = "1.1"
 
 from simtk.unit import *
 from simtk.openmm import *
@@ -101,9 +102,66 @@ class MDSystem(Modeller):
                         filePrefix="traj", saveTrajectory=False, trajInterval=500, saveVelocities=False,
                         saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True,
                         hydrogenMass=1*amu, reporters=None):
-        """
-        Build a simulation context from the system. The simulation is
+        """Build a simulation context from the system. The simulation is
         then available as an attribute.
+
+        Parameters
+        ----------
+        integrator : Openmm Integrator, optional
+            Integrator for computing the MD trajectory, by default LangevinMiddleIntegrator
+        dt : simtk.Unit, optional
+            Time step size for integration, by default 0.002*picoseconds
+        temperature : simtk.Unit, optional
+            Temperature for the thermostat, by default 298.15*kelvin
+        ensemble : str, optional
+            Statistical ensemble for the simulation, by default "NPT"
+        posre : bool, optional
+            Whether to apply position restraints (posre), by default False
+        posre_sel : str, optional
+            Rule for selecting atoms to apply the posre, by default "not water and not (element Na or element Cl) and not element H"
+        efx : bool, optional
+            Whether to apply electric field (EF), by default False
+        ef : tuple, optional
+            Direction of the uniform EF, by default (0,0,0)
+        ef_sel : str, optional
+            _description_, by default "all"
+        nonbondedMethod : OpenMM NonbondedForce, optional
+            Model for nonbonded interactions between particles, by default PME
+        nonbondedCutoff : simtk.Unit, optional
+            Cutoff distance for nonbonded interactions, by default 1.*nanometer
+        constraints : OpenmM Constraints, optional
+            Constraints used for the simulation, by default HBonds
+        rigidWater : bool, optional
+            Whether to treat water molecules as rigid (e.g., 3-pt models), by default True
+        exceptions : list, optional
+            _description_, by default []
+        filePrefix : str, optional
+            Prefix to the saved files, by default "traj"
+        saveTrajectory : bool, optional
+            Whether to save trajectory from simulation, by default False
+        trajInterval : int, optional
+            Frequency of saving trajectory specified as the number of frames in between, by default 500
+        saveVelocities : bool, optional
+            Whether to save velocity from simulation, by default False
+        saveStateData : bool, optional
+            Whether to save other state data from simulation, by default False
+        stateDataInterval : int, optional
+            Frequency of saving other state data, by default 250
+        atomSubset : _type_, optional
+            _description_, by default None
+        thermalize : bool, optional
+            _description_, by default True
+        hydrogenMass : simtk.Unit, optional
+            Hydrogen mass, by default 1*amu
+        reporters : List, optional
+            List of reporters for collecting any additional information, by default None.
+            A reporter is defined as a 5-tuple of (filePrefix, offset, trajInterval, 
+            stateDataInterval, atomSubset)
+
+        Returns
+        -------
+        _type_
+            _description_
         """
 
         # If simulation exists, close any reporters

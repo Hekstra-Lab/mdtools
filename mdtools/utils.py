@@ -509,9 +509,13 @@ def average_structure_factors(input_name: str,
     dataset.write_mtz(f"{input_name}_avg.mtz")
 
 def _generate_flexible_fun(f, reader, writer):
-    """
-    Transforms f(input)                                      -> retval
-            to f_flex(generalized_input, generalized_output) -> None / retval'
+    """Transforms f(input)                                      -> retval
+               to f_flex(generalized_input, generalized_output) -> None / retval'
+        
+        An experimental feature that allows wrapping a simple function with single
+        input and single output to handle multiple inputs or outputs.
+
+        (this is not very relevant to the purpose of our package though...)
     """
     def f_flex(input, output):
         if isinstance(input, list):
@@ -525,10 +529,23 @@ def _generate_flexible_fun(f, reader, writer):
             if output is None:
                 return f(input)
             else:
-                writer(f(reader(i)), output)
+                writer(f(reader(input)), output)
     return f_flex
 
-def compute_net_dipole_moment(partial_charges, input=None, output=None):
+def compute_net_dipole_moment(partial_charges: np.ndarray, 
+                              input=None, 
+                              output=None):
+    """Compute net dipole moment from trajectory.
+
+    Parameters
+    ----------
+    partial_charges : np.ndarray
+        1D array containing atomic partial charges for all atoms in the system.
+    input : Any, optional
+        Input file name, or a list of file name, by default None
+    output : Any, optional
+        Output file name, or a list of file name, or None, by default None
+    """
     def core(traj, args=None, kwargs=None):
         com = mdtraj.compute_center_of_mass(traj)
         xyz_minus_com = traj.xyz - com[:,None,:]
@@ -543,12 +560,29 @@ def compute_net_dipole_moment(partial_charges, input=None, output=None):
     return (_generate_flexible_fun(core, reader, writer))(input, output)
 
 def mtz_to_cartesian_arr(mtz: rs.Dataset):
+    """Convert structure factors from complex to Cartesian representation
+    """
     return np.array([amp*np.exp(np.pi*phase/180 * 1j) for [amp, phase] in mtz.to_numpy()])
 
 def cartesian_arr_to_polar(arr: np.array):
+    """Convert structure factors from Cartesian to complex representation
+    """
     return np.stack([np.abs(arr), np.angle(arr) / np.pi * 180]).T
 
-def compute_all_difference_maps(file_name, n_chains=4, phases=['pos', 'zero', 'neg']):
+def compute_all_difference_maps(file_name: str, 
+                                n_chains: int = 4, 
+                                phases: List[str] = ['pos', 'zero', 'neg']):
+    """Compute internal and ordinary difference maps using all chains' maps.
+
+    Parameters
+    ----------
+    file_name : str
+        Input file name
+    n_chains : int, optional
+        Number of chains in the system, by default 4
+    phases : List[str], optional
+        List of phases of EF perturbation, by default ['pos', 'zero', 'neg']
+    """
     # calculate internal diff map for all phases and pairs
     for phase in phases:
         for pair in itertools.combinations(range(n_chains), 2):
