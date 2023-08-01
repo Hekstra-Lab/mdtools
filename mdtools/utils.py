@@ -13,15 +13,31 @@ from mdtraj.utils import in_units_of
 from mdtraj.core.trajectory import Trajectory
 import itertools
 
-def save_hdf5(self, filename, force_overwrite=True, mode='w'):
+def save_hdf5(traj, filename, force_overwrite=True, mode='w'):
+    """Save trajectory in HDF5 format. Retains crystallographic cell length and angles.
+
+    Parameters
+    ----------
+    traj: mdtraj.Trajectory
+        Input trajectory to save
+    filename : _type_
+        Name of the file for saving the trajectory
+    force_overwrite : bool, optional
+        If true, will overwrite existing content in the file, by default True
+    mode : str, optional
+        File open mode, by default 'w'
+    """
     with HDF5TrajectoryFile(filename, mode, force_overwrite=force_overwrite) as f:
-                f.write(coordinates=in_units_of(self.xyz, Trajectory._distance_unit, f.distance_unit),
-                        time=self.time,
-                        cell_lengths=in_units_of(self.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
-                        cell_angles=self.unitcell_angles)
-                f.topology = self.topology
+        f.write(coordinates=in_units_of(traj.xyz, Trajectory._distance_unit, f.distance_unit),
+                time=traj.time,
+                cell_lengths=in_units_of(traj.unitcell_lengths, Trajectory._distance_unit, f.distance_unit),
+                cell_angles=traj.unitcell_angles)
+        f.topology = traj.topology
 
 def _save_traj(traj, fname):
+    """
+    Wrapper function over `save_hdf5` to be used in this utils file
+    """
     save_hdf5(traj, fname, force_overwrite=False, mode='a')
 
 def getFieldStrength(e):
@@ -39,8 +55,27 @@ def getFieldStrength(e):
 
 
 def compute_RMSD_by_chain(target_traj, top, rule, chain_id_list = None):
+    """Compute RMSD for each chain in a molecular system.
+
+    Parameters
+    ----------
+    target_traj : mdtraj.Trajectory
+        Trajectory of the molecular system of interest
+    top : mdtraj.Topology
+        Topology of the system
+    rule : str
+        mdtraj selection rule for chosing subset of atoms in each chain
+    chain_id_list : List[int], optional
+        List of chain_ids so RMSD values are only computed for these chains. 
+        If None, will compute for all chains, by default None
+
+    Returns
+    -------
+    Tuple (np.ndarray, np.ndarray, np.ndarray)
+        Returns a 2D array of RMSD for each chain over time as the first item.
+        The second and third items are the mean and std of RMSD across all chains.
+    """
     chains_rmsd = []
-    n_frames = target_traj.n_frames
     if chain_id_list == None:
         chain_id_list = range(top.n_chains)
     for chain_id in chain_id_list:
@@ -53,12 +88,28 @@ def compute_RMSD_by_chain(target_traj, top, rule, chain_id_list = None):
     chains_rmsd = np.array(chains_rmsd)
     return chains_rmsd, np.mean(chains_rmsd, axis = 0), np.std(chains_rmsd, axis = 0)
 
-def plot_RMSD_by_chain(chains_rmsd, rule, n_frames):
+def plot_RMSD_by_chain(chains_rmsd: np.ndarray, 
+                       rule: str, 
+                       n_frames: int, 
+                       dn_frames: int = 100):
+    """Plot the RMSD computed from `compute_RMSD_by_chain`
+
+    Parameters
+    ----------
+    chains_rmsd : np.ndarray
+        2D array of RMSD for each chain over time
+    rule : str
+        mdtraj selection rule for chosing subset of atoms in each chain
+    n_frames : int
+        Number of frames to include in the plot. 
+    dn_frames: int
+        Number of frames between every two points on the plot, by default 100.
+    """
     plt.figure(figsize=(18, 12))
     plt.rc('font', size=16)
     plt.title("RMSD by chain (rule: {})".format(rule))
     plt.xlabel("Time (ns)")
-    plt.xticks(np.arange(0, n_frames, 100), np.arange(0, n_frames,100) / 10)
+    plt.xticks(np.arange(0, n_frames, dn_frames), np.arange(0, n_frames, dn_frames) / 10)
     plt.ylabel("RMSD (nm)")
     for chid, chain_rmsd in enumerate(chains_rmsd):
         plt.plot(chain_rmsd, label = "chain " + str(chid))
@@ -66,19 +117,53 @@ def plot_RMSD_by_chain(chains_rmsd, rule, n_frames):
     plt.legend(loc = 'upper right')
 
 
-def plot_RMSD_by_chain_stat(avg_rmsd, std_rmsd, rule, n_frames):
+def plot_RMSD_by_chain_stat(avg_rmsd: np.ndarray, 
+                            std_rmsd: np.ndarray, 
+                            rule: str, 
+                            n_frames: int,
+                            dn_frames: int = 100):
+    """Plot the RMSD statistics (avg and std) computed from `compute_RMSD_by_chain`
+
+    Parameters
+    ----------
+    avg_rmsd : np.ndarray
+        1D array of average RMSD across chains over time
+    std_rmsd : np.ndarray
+        1D array of standard deviation of RMSD across chains over time
+    rule : str
+        mdtraj selection rule for chosing subset of atoms in each chain
+    n_frames : int
+        Number of frames to include in the plot.
+    dn_frames: int
+        Number of frames between every two points on the plot, by default 100.
+    """
+
     plt.figure(figsize=(18, 12))
     plt.rc('font', size=16)
     plt.title("RMSD by chain (rule: {})".format(rule))
     plt.xlabel("Time (ns)")
-    plt.xticks(np.arange(0, n_frames, 100), np.arange(0, n_frames,100) / 10)
+    plt.xticks(np.arange(0, n_frames, dn_frames), 
+               np.arange(0, n_frames, dn_frames) / 10)
     plt.ylabel("RMSD (nm)")
     plt.plot(avg_rmsd, label = "averaged")
     plt.plot(avg_rmsd + std_rmsd, label = "+1 sd")
     plt.plot(avg_rmsd - std_rmsd, label = "-1 sd")
     plt.legend(loc = 'upper right')
 
-def unwrap_atom_axis(traj):
+def unwrap_atom_axis(traj: mdtraj.Trajectory):
+    """Unwrap Cartesian coordinates of the molecular system along atomic indices.
+
+    In a periodic system, during molecular simulation, the coordinates are only 
+    meaningful upto some modulo operation. Thus, molecule may cut through the 
+    boundary and be wrapped back at the opposite face of the system, affecting 
+    subsequent analyses. This function removes the wrapping artifact by making 
+    sure the neighboring atoms are in proximity.
+
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        Input trajectory, will be modified in place.
+    """
     L_arr = traj.unitcell_lengths[0]
     for i in range(3):
         L=L_arr[i]
@@ -90,6 +175,22 @@ def unwrap_atom_axis(traj):
         traj.xyz[:,:,i] = xi_corr
 
 def unwrap_time_axis(traj, selection='all'):
+    """Unwrap Cartesian coordinates of molecular system along the time axis.
+
+    In a periodic system, during molecular simulation, the coordinates are only 
+    meaningful upto some modulo operation. Over time, the center of mass of a 
+    molecule may drift out of one boundary so the molecule suddenly appears at
+    the opposite boundary in subsequent frames. Such discontinuous jumps in 
+    molecular coordinates also hampers analyses and this function removes the 
+    artifact by making sure the coordinates from neighboring frames are close.
+
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        Input trajectory, will be modified in place.
+    selection : List[int] | str, optional
+        Atom selection for fixing coordinates, by default 'all'
+    """
     L_arr = traj.unitcell_lengths[0]
     if selection == 'all':
         selection = np.arange(traj.xyz.shape[1])
@@ -102,16 +203,31 @@ def unwrap_time_axis(traj, selection='all'):
         traj.xyz[:,selection,i] = xi_corr
 
 DEN = 24 # why this? See https://gemmi.readthedocs.io/en/latest/symmetry.html for an explanation...
-def real_space_transform(xyz: np.ndarray, op: gemmi.Op, unitcell_vecs: np.ndarray, wrap: bool = True,
+
+def real_space_transform(xyz: np.ndarray, 
+                         op: gemmi.Op, 
+                         unitcell_vecs: np.ndarray, 
+                         wrap: bool = True,
                          fractional: bool = False) -> np.ndarray:
-    """
-    Transforms an array of real coordinates by a symmetry operator and returns the new array.
-    :param xyz: n * 3 array that stores the real space coordinates to be transformed
-    :param op: the symop to be applied
-    :param unitcell_vecs: 3 * 3 array with rows as unit cell vectors
-    :param wrap: if True, fractional coordinates will be wrapped to be inside the unit box
-    :param fractional: if True, returns fractional coordinate instead
-    :return: n * 3 array containing real coordinates as transformed by op.
+    """Transforms an array of real coordinates by a symmetry operator and returns the new array.
+
+    Parameters
+    ----------
+    xyz : np.ndarray
+        n * 3 array that stores the real space coordinates to be transformed
+    op : gemmi.Op
+        The symmetry operation to be applied
+    unitcell_vecs : np.ndarray
+        3 * 3 array with rows as unit cell vectors
+    wrap : bool, optional
+        If true, fractional coordinates will be wrapped to be inside the unit box, by default True
+    fractional : bool, optional
+        If True, returns fractional coordinate instead, by default False
+
+    Returns
+    -------
+    np.ndarray
+        n * 3 array containing real coordinates as transformed by op.
     """
     tran = np.expand_dims(np.array(op.tran) / DEN, axis=0)
     rot = np.expand_dims(inv(np.expand_dims(np.array(op.rot), axis=0)[0] / DEN), axis=0)
@@ -126,15 +242,31 @@ def real_space_transform(xyz: np.ndarray, op: gemmi.Op, unitcell_vecs: np.ndarra
     else:
         return ((xyz @ orthmat) @ rot + tran) @ deorthmat
 
-def trajectory_transform(traj: mdtraj.Trajectory, op: gemmi.Op, inplace=True) -> None:
-    """
-    Performs a transformation applied to all atomic coordinates in each frame of the input trajectory according to symmetry operator `op`
+def trajectory_transform(traj: mdtraj.Trajectory, 
+                         op: gemmi.Op, inplace=True) -> None:
+    """Performs a transformation applied to all atomic coordinates in each frame
+    of the input trajectory according to symmetry operator `op`.
+
     Assumes constant unit cell vector for speed.
-    Assumes CoM does't jump around near the boundary of the cell (use smart wrap on the trajectory first if needed)
-    :param traj: Input trajectory that the transformation will be applied to, frame by frame.
-    :param op: Symmetry operator to be applied, contains translation and rotation parts.
-    :return: None.
+    Assumes CoM does't jump around near the boundary of the cell.
+    (use unwrapping functions on the trajectory first if needed)
+
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        Input trajectory that the transformation will be applied to, frame by frame.
+    op : gemmi.Op
+        Symmetry operator to be applied, contains translation and rotation parts.
+    inplace : bool, optional
+        If true, will transform trajectory inplace, else return a modified copy, 
+        by default True
+
+    Returns
+    -------
+    mdtraj.Trajectory | None
+        New trajectory if `inplace` is True.
     """
+
     tran = np.expand_dims(np.array(op.tran) / DEN, axis=0)
     rot = np.expand_dims(inv(np.expand_dims(np.array(op.rot), axis=0)[0] / DEN), axis=0)
     deorthmat = traj.unitcell_vectors[0]
@@ -149,9 +281,7 @@ def trajectory_transform(traj: mdtraj.Trajectory, op: gemmi.Op, inplace=True) ->
     else:
         return new_xyz
 
-
-def trajectory_revert_to_asu(traj: mdtraj.Trajectory, sg: int, chain_ids: List[int], threshold=0.05):
-    """
+"""
     Performs a transformation applied to all atomic coordinates in each frame of the input trajectory to
     restore each chain back to the first chain (ASU), returns the new trajectory.
     Assumes that each chain doesn't move too much in the unit cell so the same symop can be applied across all frames.
@@ -161,6 +291,38 @@ def trajectory_revert_to_asu(traj: mdtraj.Trajectory, sg: int, chain_ids: List[i
     :param chain_ids: a list of chains to perform the operation on.
     :return: None
     """
+
+def trajectory_revert_to_asu(traj: mdtraj.Trajectory, 
+                             sg: int, 
+                             chain_ids: List[int], 
+                             threshold=0.05):
+    """Performs a transformation applied to all atomic coordinates in each frame
+    of the input trajectory to restore each chain back to the first chain (ASU), 
+    returns the new trajectory.
+
+    Assumes that each chain doesn't move too much in the unit cell so the same 
+    symop can be applied across all frames.
+    Assumes reference chain is the one with id = 0.
+    
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        Input trajectory that the transformation will be applied to.
+    sg : int
+        Space group code describing the symmetry of the system.
+    chain_ids : List[int]
+        A list of chains to perform the operation on.
+    threshold : float, optional
+        Decimal fraction threshold that determines how much CoM drift compared to 
+        the cell dimension is allowed between the reference and symop reverted ASU, 
+        by default 0.05.
+
+    Returns
+    -------
+    mdtraj.Trajectory
+        New trajectory with all chains reverted to the first ASU position.
+    """
+
     frame0 = traj[0]
     top = traj.topology
     ucv = traj.unitcell_vectors[0]
@@ -176,11 +338,9 @@ def trajectory_revert_to_asu(traj: mdtraj.Trajectory, sg: int, chain_ids: List[i
         top_sel = top.select(f"chainid {id}")
         com = mdtraj.compute_center_of_mass(frame0.atom_slice(top_sel))[0]  # (3,)
         subtraj = traj.atom_slice(top_sel)
-        # print(f"Looking at chain {id}, com {com}, refcom {ref_com}")
         for op, op_inv in zip(ops, ops_inv):
             new_com = real_space_transform(com, op_inv, ucv)
             ratio = norm(new_com - ref_com) / char_length
-            # print(f"Looking at symop {op.triplet()}, ratio {ratio}")
             if ratio < threshold:
                 trajectory_transform(subtraj, op_inv)
                 print(f"Chain {id} corresponds to symop {op.triplet()}")
@@ -188,8 +348,51 @@ def trajectory_revert_to_asu(traj: mdtraj.Trajectory, sg: int, chain_ids: List[i
         new_traj = new_traj.stack(subtraj, keep_resSeq=False)
     return new_traj
 
-def align_and_split_by_chain(traj, output_name, unitcell_ref, asu_ref, chainwise_alignment=True,
-                                   asu_reversion=True, sg=None, atom_selection=None):
+def align_and_split_by_chain(traj: mdtraj.Trajectory, 
+                             output_name: str, 
+                             unitcell_ref: mdtraj.Trajectory, 
+                             asu_ref: mdtraj.Trajectory, 
+                             chainwise_alignment=True,
+                             asu_reversion: bool = True, 
+                             sg: int = None, 
+                             atom_selection: List[int] | None = None):
+    """Align and split the peptide chains in the trajectory.
+
+    We provide three modes of alignment that are useful in different scenarios:
+    1. Alignment of entire cell content: useful for studying structural deformation
+    of entire crystal simulation system as it retains the relative displacements of
+    chains from their equilibrium position. This can be done with 
+    `chainwise_alignment = False, asu_reversion = False`.
+    2. Alignment by symops: this is option 1 plus an additional reversion of chains
+    back to first ASU position via all symops of the space group. It facilitates
+    studying the anisotropic drifts among the chains due to external pertubation
+    during a crystal simulation. Uses parameter `chainwise_alignment = False, 
+    asu_reversion = True`.
+    3. Alignment by RMSD minimization: useful for studying internal motions in
+    each chain because the relative displacement among chains are eliminated via
+    superposing each chain to a reference ASU. Uses parameter 
+    `chainwise_alignment = True, asu_reversion = True/False`. 
+
+    Parameters
+    ----------
+    traj : mdtraj.Trajectory
+        Trajectory to perform alignment on and extract chains from
+    output_name : str
+        Output file name. File will be saved in the **current** directory
+    unitcell_ref : mdtraj.Trajectory
+        Unit cell reference structure, used if `chainwise_alignment = False`
+    asu_ref : mdtraj.Trajectory
+        Asymmetric unit reference structure, used if `chainwise_alignment = True`
+    chainwise_alignment : bool, optional
+        Switches between alignment modes, see above for explanation, by default True
+    asu_reversion : bool, optional
+        Switches between alignment modes, see above for explanation, by default True
+    sg : int, optional
+        Space group number, by default None
+    atom_selection : List[int] | None, optional
+        List of atom indices to use for alignment, if None, use all atoms. 
+        By default None
+    """
     traj = traj.remove_solvent()
     n_frames = traj.xyz.shape[0]
     top = traj.topology
@@ -210,30 +413,87 @@ def align_and_split_by_chain(traj, output_name, unitcell_ref, asu_ref, chainwise
             subtraj.superpose(asu_ref, atom_indices=atom_selection)
         _save_traj(subtraj, f"{output_name}_subtraj_{chain_id}.h5")
 
-def save_snapshots_from_traj(target_traj, output_name, frame_offset, d_frame):
+def save_snapshots_from_traj(target_traj: mdtraj.Trajectory, 
+                             output_name: str, 
+                             frame_offset: int, 
+                             d_frame: int):
+    """Handy function to save snapshots from trajectory
+
+    Parameters
+    ----------
+    target_traj : mdtraj.Trajectory
+        Trajectory to save from 
+    output_name : str
+        Output file name. File will be saved to the **current** directory
+    frame_offset : int
+        Initial frame to slice from
+    d_frame : int
+        Number of frames between every two saved snapshots
+    """
+
     for i, frame in enumerate(target_traj[frame_offset::d_frame]):
 #         frame.superpose(ref_traj, atom_indices = top.select("is_backbone"),
 #                         ref_atom_indices = top.select("is_backbone")).save_pdb(f"{output_name}_{i}.pdb")
         frame.save_pdb(f"{output_name}_{i}.pdb")
 
-def batch_annotate_spacegroup(input_name, max_frame, sg):
-    """
-    Note: sg must be a string here!
+def batch_annotate_spacegroup(input_name: str, 
+                              max_frame: int, 
+                              sg: str):
+    """Annotate spacegroup for a batch of PDB files
+
+    Parameters
+    ----------
+    input_name : str
+        Input file to read from. Will read file from **current** directory
+    max_frame : int
+        Number of frames to read
+    sg : str
+        Space group number
     """
     for frame_id in range(max_frame):
         struct = gemmi.read_pdb(f"{input_name}_{frame_id}.pdb")
         struct.spacegroup_hm = sg
         struct.write_pdb(f"{input_name}_{frame_id}.pdb")
 
-def batch_fmodel(input_name, max_frame, resolution=1.5,
-                 phenix_command='source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel', 
-                 output_path=None):
+def batch_fmodel(input_name: str, 
+                 max_frame: int, 
+                 resolution: int = 1.5,
+                 phenix_command: str = 'source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel', 
+                 output_path: str | None = None):
+    """Compute electron density map for a batch of PDB files. 
+
+    Note: must make sure the files have spacegroup annotations first.
+
+    Parameters
+    ----------
+    input_name : str
+        Input file name
+    max_frame : int
+        Number of frames to process
+    resolution : int, optional
+        Electron density map resolution, by default 1.5 (angstrom)
+    phenix_command : str, optional
+        Command for running phenix.fmodel from your machine, 
+        by default 'source /usr/local/phenix-1.20.1-4487/phenix_env.sh; phenix.fmodel'
+    output_path : str | None, optional
+        Output file path, if None outputs to current path, by default None
+    """
     for frame_id in range(max_frame):
             subprocess.run(('' if output_path is None else f'cd {output_path};') +\
                             phenix_command + f' {input_name}_{frame_id}.pdb high_resolution={resolution}',
                              shell=True, stdout=subprocess.DEVNULL)
 
-def average_structure_factors(input_name, max_frame):
+def average_structure_factors(input_name: str, 
+                              max_frame: int):
+    """Average structure factors for a batch of .mtz files
+
+    Parameters
+    ----------
+    input_name : str
+        Input file name
+    max_frame : int
+        Number of frames to process
+    """
     dataset = rs.read_mtz(f"{input_name}_0.pdb.mtz")
     n_reflections = dataset.shape[0]
 
@@ -248,7 +508,7 @@ def average_structure_factors(input_name, max_frame):
     dataset.infer_mtz_dtypes(inplace = True)
     dataset.write_mtz(f"{input_name}_avg.mtz")
 
-def generate_flexible_fun(f, reader, writer):
+def _generate_flexible_fun(f, reader, writer):
     """
     Transforms f(input)                                      -> retval
             to f_flex(generalized_input, generalized_output) -> None / retval'
@@ -280,12 +540,12 @@ def compute_net_dipole_moment(partial_charges, input=None, output=None):
         if isinstance(input, str):
             return mdtraj.load(input)
         return input
-    return (generate_flexible_fun(core, reader, writer))(input, output)
+    return (_generate_flexible_fun(core, reader, writer))(input, output)
 
-def mtz_to_cartesian_arr(mtz):
+def mtz_to_cartesian_arr(mtz: rs.Dataset):
     return np.array([amp*np.exp(np.pi*phase/180 * 1j) for [amp, phase] in mtz.to_numpy()])
 
-def cartesian_arr_to_polar(arr):
+def cartesian_arr_to_polar(arr: np.array):
     return np.stack([np.abs(arr), np.angle(arr) / np.pi * 180]).T
 
 def compute_all_difference_maps(file_name, n_chains=4, phases=['pos', 'zero', 'neg']):

@@ -2,6 +2,7 @@
 squeeze.py: Squeeze run to titrate the number of waters in lattice
 
 Author: Jack Greisman <greisman@g.harvard.edu>
+        Ziyuan Zhao   <ziyuanzhao@fas.harvard.edu>
 """
 __author__  = "Jack Greisman"
 __version__ = "1.0"
@@ -15,7 +16,7 @@ from scipy import stats
 import pandas as pd
 import itertools
 
-def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
+def _iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
     if n_waters == 0:
         return
     if dn <= 0:
@@ -30,7 +31,7 @@ def iter_duplicate_waters(mdsystem, n_waters, dn = 1000):
             duplicateWaters(mdsystem, n_waters)
             break
 
-def iter_delete_waters(mdsystem, n_waters, dn = 1000):
+def _iter_delete_waters(mdsystem, n_waters, dn = 1000):
     if n_waters == 0:
         return
     if dn <= 0:
@@ -45,13 +46,50 @@ def iter_delete_waters(mdsystem, n_waters, dn = 1000):
             deleteWaters(mdsystem, n_waters)
             break
 
-def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds,
-            initial_water_perturb = 0, dn = 0, dt=0.002*picoseconds,
-            targetvol=0):
+"""Squeeze run to titrate the number of waters in a lattice MD system
+    in order to maintain desired periodic box vectors.
+
+
+    Args:
+        mdsystem (mdtools.MDSystem): System to perform the squeeze run on
+        tolerance (float, optional): Threshold for volume change after squeeze iteration for determining whether the system has reached convergence. Defaults to 0.003.
+        maxIterations (int, optional): Maximum iterations of titration to perform. Defaults to 10.
+        maxSimtime (simtk.Unit, optional): Maximum total simulation time allowed for the squeeze run. Defaults to 10*nanoseconds.
+        initial_water_perturb (int, optional): Initial number of water molecules to add to the system. Defaults to 0.
+        dn (int, optional): Number of water molecules to add each time. If set to 0, will add all water molecules in one step. Defaults to 0.
+        dt (simtk.Unit, optional): Timestep of the simulation used for squeezing the system. Defaults to 0.002*picoseconds.
+        targetvol (int, optional): Target volume. If set to 0, will use the initial volume of the input system. Defaults to 0.
     """
-    Squeeze run to titrate the number of waters in a lattice MD system
-    in order to maintain desired periodic box vectors
+
+def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanoseconds, initial_water_perturb = 0, dn = 0, dt=0.002*picoseconds, targetvol=0):
+    """Squeeze run to titrate the number of waters in a lattice MD system
+    in order to maintain desired periodic box vectors.
+
+    Parameters
+    ----------
+    mdsystem : mdtools.MDSystem
+        System to perform the squeeze run on
+    tolerance : float, optional
+        Threshold for volume change after squeeze iteration for determining
+        whether the system has reached convergence, by default 0.003
+    maxIterations : int, optional
+        Maximum iterations of titration to perform, by default 10
+    maxSimtime : simtk.Unit, optional
+        Maximum total simulation time allowed for the squeeze run, 
+        by default 10*nanoseconds
+    initial_water_perturb : int, optional
+        Initial number of water molecules to add to the system, 
+        If set to 0, will add all water molecules in one step, by default 0
+    dn : int, optional
+        Number of water molecules to add each time, by default 0
+    dt : simtk.Unit, optional
+        Timestep of the simulation used for squeezing the system,
+        by default 0.002*picoseconds
+    targetvol : int, optional
+        Target volume. If set to 0, will use the initial volume of the 
+        input system, by default 0
     """
+
     # Target periodic box vectors
     targetv = mdsystem.topology.getPeriodicBoxVectors()
 
@@ -62,10 +100,10 @@ def squeeze(mdsystem, tolerance=0.003, maxIterations=10, maxSimtime=10*nanosecon
 
     # Initial addition or removal of water if required
     if initial_water_perturb > 0:
-        iter_duplicate_waters(mdsystem, initial_water_perturb, dn)
+        _iter_duplicate_waters(mdsystem, initial_water_perturb, dn)
         print(f"Initial perturbation +{initial_water_perturb} waters", flush=True)
     elif initial_water_perturb < 0:
-        iter_delete_waters(mdsystem, -initial_water_perturb, dn)
+        _iter_delete_waters(mdsystem, -initial_water_perturb, dn)
         print(f"Initial perturbation -{-initial_water_perturb} waters", flush=True)
 
     # Loop until converged
@@ -157,7 +195,7 @@ def _computeVolumeStats(csvfile, simtime):
     csvfile : str
         CSV file from OpenMM StateDataReporter
     simtime : int
-        Number of frames from simulation end to consider for
+        Number of frames from simulation end to consider for 
         box volume statistics
 
     Returns
@@ -172,9 +210,16 @@ def _computeVolumeStats(csvfile, simtime):
     return vol, sem, std
     
 def duplicateWaters(mdsystem, numWaters):
+    """Duplicate a random water.
+
+    Parameters
+    ----------
+    mdsystem : mdtools.MDSystem
+        The system to duplicate water molecules from
+    numWaters : int
+        Number of individual water molecules to duplicate
     """
-    Duplicate a random water
-    """
+
     # Find chain with most waters
     mdtrajtop    = mdsystem._toMDTrajTopology()
     watercounts = []
@@ -200,9 +245,16 @@ def duplicateWaters(mdsystem, numWaters):
     return
 
 def deleteWaters(mdsystem, numWaters):
+    """Delete a random water.
+
+    Parameters
+    ----------
+    mdsystem : mdtools.MDSystem
+        The system to delete water molecules from
+    numWaters : int
+        Number of individual water molecules to delete
     """
-    Delete a random water
-    """
+
     # Find chain with most waters
     mdtrajtop    = mdsystem._toMDTrajTopology()
     watercounts = []
