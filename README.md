@@ -22,9 +22,25 @@ conda install -c conda-forge mdtraj
 python setup.py install
 ```
 
+Note (from Ziyuan): I have added the requirements for `openmm` and `mdtraj` in 
+`setup.py` but haven't tested it.
+
+
 # Examples
 
 Example scripts that make use of the provided libraries will be found in the
 examples directory (Stay tuned).
+
+# Changelog
+* Added many utility functions in `mdtools.utils` for performing post-simulation
+analyses on crystal MD systems.
+* Support saving velocities and other data through additional reporters in 
+`MDSystem.buildSimulation`.
+* Support reporting force overflows at specific atoms in `MDSystem.equilibrate` 
+and `MDSystem.simulate`, which are very helpful for debugging forcefield issues
+during pilot MD simulation runs.
+* Support bulk addition of specified amount of water during `squeeze` runs and 
+set target volume to reach convergence more rapidly under prior knowledge about 
+system density or volume.
 
 

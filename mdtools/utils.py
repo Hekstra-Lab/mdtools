@@ -6,7 +6,7 @@ from numpy.linalg import inv, norm, det
 import gemmi
 from typing import List
 import reciprocalspaceship as rs
-import sys, os, getopt, subprocess
+import subprocess
 ###
 from mdtraj.formats.hdf5 import *
 from mdtraj.utils import in_units_of

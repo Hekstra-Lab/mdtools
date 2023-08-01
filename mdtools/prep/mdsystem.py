@@ -118,13 +118,14 @@ class MDSystem(Modeller):
         posre : bool, optional
             Whether to apply position restraints (posre), by default False
         posre_sel : str, optional
-            Rule for selecting atoms to apply the posre, by default "not water and not (element Na or element Cl) and not element H"
+            Rule for selecting atoms to apply the posre, by default 
+            "not water and not (element Na or element Cl) and not element H"
         efx : bool, optional
-            Whether to apply electric field (EF), by default False
+            Whether to apply electric field (EF) during simulation, by default False
         ef : tuple, optional
             Direction of the uniform EF, by default (0,0,0)
         ef_sel : str, optional
-            _description_, by default "all"
+            Rule for selecting atoms that will feel the EF, by default "all"
         nonbondedMethod : OpenMM NonbondedForce, optional
             Model for nonbonded interactions between particles, by default PME
         nonbondedCutoff : simtk.Unit, optional
@@ -134,7 +135,8 @@ class MDSystem(Modeller):
         rigidWater : bool, optional
             Whether to treat water molecules as rigid (e.g., 3-pt models), by default True
         exceptions : list, optional
-            _description_, by default []
+            List of atoms that will be excluded from nonbonded forces treatment, 
+            by default []
         filePrefix : str, optional
             Prefix to the saved files, by default "traj"
         saveTrajectory : bool, optional
@@ -147,10 +149,12 @@ class MDSystem(Modeller):
             Whether to save other state data from simulation, by default False
         stateDataInterval : int, optional
             Frequency of saving other state data, by default 250
-        atomSubset : _type_, optional
-            _description_, by default None
+        atomSubset : Any | None, optional
+            Indices of the subset of atoms to record trajectory for, 
+            if None, all atoms will be recorded, by default None
         thermalize : bool, optional
-            _description_, by default True
+            If True, initialize velocities according to Maxwell-Boltzmann 
+            distribution, by default True
         hydrogenMass : simtk.Unit, optional
             Hydrogen mass, by default 1*amu
         reporters : List, optional
@@ -160,8 +164,8 @@ class MDSystem(Modeller):
 
         Returns
         -------
-        _type_
-            _description_
+        mdtools.MDSystem
+            Returns self, a modified MD system 
         """
 
         # If simulation exists, close any reporters

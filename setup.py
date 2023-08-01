@@ -10,11 +10,14 @@ __version__ = getVersionNumber()
 setup(
     name='mdtools',
     version=__version__,
-    author='Jack B. Greisman',
-    author_email='greisman@g.harvard.edu',
+    author='Jack B. Greisman, Ziyuan Zhao',
+    author_email='greisman@g.harvard.edu, ziyuanzhao@fas.harvard.edu',
     packages=find_packages(),
     description='Tools for running MD simulation in OpenMM',
     install_requires=[
         "numpy >= 1.6",
+        "reciprocalspaceship",
+        "mdtraj",
+        "openmm"
     ],
 )
