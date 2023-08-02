@@ -35,7 +35,7 @@ conda install -c omnia -c conda-forge openmm
 conda install -c conda-forge mdtraj
 ```
 
-Alternative, build the package by yourself and install all the above dependencies automatically with Conda:
+Alternatively, build the package by yourself and install all the above dependencies automatically with Conda:
 ```
 conda create -n NEW_CONDA_ENV_NAME python=DESIRED_PYTHON_VERSION # >=3.7 
 conda activate NEW_CONDA_ENV_NAME
@@ -43,10 +43,9 @@ conda build . --python=DESIRED_PYTHON_VERSION #choose from 3.7, 3.8, 3.9, 3.10, 
 conda install --use-local mdtools
 ```
 
-Note: building the package could be very slow in vanilla Conda due to the many dependencies that need to be resolved. Please consider installing [boa](https://github.com/mamba-org/boa) and use `conda mambabuild` for a immense speed-up. Also, use `mamba install` instead of `conda install` for additional speed-up.
+Note: building the package could be very slow in vanilla Conda due to the many dependencies that need to be resolved. Please consider installing [boa](https://github.com/mamba-org/boa) and use `conda mambabuild` for an immense speed-up. Also, use `mamba install` instead of `conda install` for additional speed-up.
 
-<!-- Note (from Ziyuan): I have added the requirements for `openmm` and `mdtraj` in 
-`setup.py` but haven't tested it. -->
+The above Conda build and install method has been tested on arm64 OSX and also on FASRC clusters. 
 
 
 # Examples
@@ -66,5 +65,6 @@ during pilot MD simulation runs.
 * Support bulk addition of specified amount of water during `squeeze` runs and 
 set target volume to reach convergence more rapidly under prior knowledge about 
 system density or volume.
+* Several minor QoL changes.
 
 
