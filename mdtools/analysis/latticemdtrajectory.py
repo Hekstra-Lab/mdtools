@@ -9,17 +9,20 @@ __version__ = "1.0"
 
 import mdtraj
 import numpy as np
+import mdtools.utils as utils
 
+# Problem, currently it doesn't seem possible to slice a LatticeMDTrajectory object if we do not override the slice method
 class LatticeMDTrajectory(mdtraj.Trajectory):
     """
     LatticeMDTrajectory provides methods for the analysis of MD 
     simulations of crystal lattices.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, sg=None):
 
         traj = mdtraj.load(filename)
         super().__init__(traj.xyz, traj.topology, traj.time,
                          traj.unitcell_lengths, traj.unitcell_angles)
+        self.sg = sg
 
         # Validate unitcell information
         self._validateUnitcell()
@@ -33,7 +36,25 @@ class LatticeMDTrajectory(mdtraj.Trajectory):
             raise AttributeError('Unitcell information is not provided')
         self._check_valid_unitcell()
         return
-    
+
+    def set_unit_cell_and_symmetry(unitcell_lengths=None, unitcell_angles=None, sg=None):
+        if unitcell_lengths is not None:
+            self.unitcell_lengths = unitcell_lengths
+        if unitcell_angles is not None:
+            self.unitcell_angles = unitcell_angles
+        if sg is not None:
+            self.sg = sg
+
+    def revert_to_asu(self):
+        """
+        This method assumes that the trajectory is containing purely protein chains and then
+        revert the coordinates of the atoms back to the ASU, according to the spacegroup
+        represented by the trajectory.
+        """
+        if self.sg is None:
+            raise Exception("You must specify a spacegroup when initializing the trajectory!")
+        self.xyz = utils.trajectory_revert_to_asu(self, sg=self.sg, chain_ids=np.arange(self.n_chains)).xyz
+
     def smartWrapMolecule(self, indices):
         """
         This function applies periodic wrapping to a given set of atomic

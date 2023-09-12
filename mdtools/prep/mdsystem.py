@@ -2,9 +2,10 @@
 mdsystem.py: Extends Modeller class from OpenMM with useful methods
 
 Author: Jack Greisman <greisman@g.harvard.edu>
+        Ziyuan Zhao   <ziyuanzhao@fas.harvard.edu>
 """
 __author__  = "Jack Greisman"
-__version__ = "1.0"
+__version__ = "1.1"
 
 from simtk.unit import *
 from simtk.openmm import *
@@ -24,6 +25,7 @@ class MDSystem(Modeller):
         self.forcefield = forcefield
         self.simulation = None
         self._NonbondedForceIndex = None
+        self._more_reporters = False
 
     def _getIndexOfNonbondedForce(self, system=None):
         if not system:
@@ -97,11 +99,73 @@ class MDSystem(Modeller):
                         posre_sel="not water and not (element Na or element Cl) and not element H",
                         efx=False, ef=(0,0,0), ef_sel="all", nonbondedMethod=PME,
                         nonbondedCutoff=1.*nanometer, constraints=HBonds, rigidWater=True, exceptions=[],
-                        filePrefix="traj", saveTrajectory=False, trajInterval=500,
-                        saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True):
-        """
-        Build a simulation context from the system. The simulation is
+                        filePrefix="traj", saveTrajectory=False, trajInterval=500, saveVelocities=False,
+                        saveStateData=False, stateDataInterval=250, atomSubset=None, thermalize=True,
+                        hydrogenMass=1*amu, reporters=None):
+        """Build a simulation context from the system. The simulation is
         then available as an attribute.
+
+        Parameters
+        ----------
+        integrator : Openmm Integrator, optional
+            Integrator for computing the MD trajectory, by default LangevinMiddleIntegrator
+        dt : simtk.Unit, optional
+            Time step size for integration, by default 0.002*picoseconds
+        temperature : simtk.Unit, optional
+            Temperature for the thermostat, by default 298.15*kelvin
+        ensemble : str, optional
+            Statistical ensemble for the simulation, by default "NPT"
+        posre : bool, optional
+            Whether to apply position restraints (posre), by default False
+        posre_sel : str, optional
+            Rule for selecting atoms to apply the posre, by default 
+            "not water and not (element Na or element Cl) and not element H"
+        efx : bool, optional
+            Whether to apply electric field (EF) during simulation, by default False
+        ef : tuple, optional
+            Direction of the uniform EF, by default (0,0,0)
+        ef_sel : str, optional
+            Rule for selecting atoms that will feel the EF, by default "all"
+        nonbondedMethod : OpenMM NonbondedForce, optional
+            Model for nonbonded interactions between particles, by default PME
+        nonbondedCutoff : simtk.Unit, optional
+            Cutoff distance for nonbonded interactions, by default 1.*nanometer
+        constraints : OpenmM Constraints, optional
+            Constraints used for the simulation, by default HBonds
+        rigidWater : bool, optional
+            Whether to treat water molecules as rigid (e.g., 3-pt models), by default True
+        exceptions : list, optional
+            List of atoms that will be excluded from nonbonded forces treatment, 
+            by default []
+        filePrefix : str, optional
+            Prefix to the saved files, by default "traj"
+        saveTrajectory : bool, optional
+            Whether to save trajectory from simulation, by default False
+        trajInterval : int, optional
+            Frequency of saving trajectory specified as the number of frames in between, by default 500
+        saveVelocities : bool, optional
+            Whether to save velocity from simulation, by default False
+        saveStateData : bool, optional
+            Whether to save other state data from simulation, by default False
+        stateDataInterval : int, optional
+            Frequency of saving other state data, by default 250
+        atomSubset : Any | None, optional
+            Indices of the subset of atoms to record trajectory for, 
+            if None, all atoms will be recorded, by default None
+        thermalize : bool, optional
+            If True, initialize velocities according to Maxwell-Boltzmann 
+            distribution, by default True
+        hydrogenMass : simtk.Unit, optional
+            Hydrogen mass, by default 1*amu
+        reporters : List, optional
+            List of reporters for collecting any additional information, by default None.
+            A reporter is defined as a 5-tuple of (filePrefix, offset, trajInterval, 
+            stateDataInterval, atomSubset)
+
+        Returns
+        -------
+        mdtools.MDSystem
+            Returns self, a modified MD system 
         """
 
         # If simulation exists, close any reporters
@@ -115,7 +179,8 @@ class MDSystem(Modeller):
         # Build system
         system = self.forcefield.createSystem(self.topology, nonbondedMethod=nonbondedMethod, 
                                               nonbondedCutoff=nonbondedCutoff, 
-                                              constraints=constraints, rigidWater=rigidWater)
+                                              constraints=constraints, rigidWater=rigidWater,
+                                              hydrogenMass=hydrogenMass)
 
         # Setup MD simulation
         integrator = integrator(temperature, 1/picosecond, dt)
@@ -164,11 +229,18 @@ class MDSystem(Modeller):
             self.thermalize(temperature=temperature)
         
         # Add reporters
-        if saveTrajectory:
-            self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset))
-        if saveStateData:
-            self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
-        
+        # We extend its functionality to allow adding multiple reporters,
+        # and each reporter can have a different offset when it starts collecting data
+        if reporters is None:
+            if saveTrajectory:
+                self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, velocities=saveVelocities))
+            if saveStateData:
+                self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+            self._more_reporters = False
+        else: # we assume it is a list of tuples (filePrefix, offset, trajInterval, stateDataInterval, atomSubset)
+            self.reporters = reporters
+            self._more_reporters = True
+
         return self
 
     def thermalize(self, temperature, randomSeed=None):
@@ -228,11 +300,14 @@ class MDSystem(Modeller):
         """
         Compute the number of steps corresponding to a given chemical time
         """
-        chemtime = time.in_units_of(picoseconds)
-        dt = self.simulation.integrator.getStepSize()
-        return int(np.ceil(chemtime / dt))
+        if isinstance(time, int):
+            return time
+        else:
+            chemtime = time.in_units_of(picoseconds)
+            dt = self.simulation.integrator.getStepSize()
+            return int(np.ceil(chemtime / dt))
         
-    def simulate(self, n, outputStartingFrame=True):
+    def simulate(self, n, outputStartingFrame=True, reportLargeForceThreshold=-1):
         """
         Simulate the system for the given number of steps. If n is a 
         simtk.Unit of time, the number of steps are chosen to simulate
@@ -244,20 +319,49 @@ class MDSystem(Modeller):
             Number of steps or chemical time of simulation
         outputStartingFrame : bool
             Whether to output the initial frame of a simulation
+        reportLargeForceThreshold : int
+            If <= 0, will not report; otherwise, print a list of
+            all atoms with net forces on them exceeding the
+            threshold in magnitude
         """
+
         # If simulation step is 0, output the starting configuration
         if self.simulation.currentStep == 0 and outputStartingFrame:
             for reporter in self.simulation.reporters:
                 report = reporter.describeNextReport(self.simulation)
                 state  = self.simulation.context.getState(*report[1:])
                 reporter.report(self.simulation, state)
+        n = self._time2steps(n)
+        while n > 0:
+            if self._more_reporters:
+                next_offset = self._time2steps(self.reporters[0][1])
+                n_steps = min(n, next_offset - self.simulation.currentStep)
+                self.simulation.step(n_steps)
+                print(next_offset, self.simulation.currentStep, n_steps)
+                # Append new reporter to the list of reporters attached to the simulation if necessary
+                filePrefix, offset, trajInterval, stateDataInterval, atomSubset = self.reporters.pop(0)
+                # Requires rebuilding mdtraj
+                if trajInterval > 0:
+                    self.simulation.reporters.append(HDF5Reporter(f"{filePrefix}.h5", trajInterval, atomSubset=atomSubset, startTime=self.simulation.currentStep))
+                # This doesn't work as it currently stands!
+                if stateDataInterval > 0:
+                    self.simulation.reporters.append(StateDataReporter(f"{filePrefix}.csv", stateDataInterval, step=True, time=True, volume=True, totalEnergy=True, temperature=True, elapsedTime=True))
+                if len(self.reporters) == 0:
+                    self._more_reporters = False
+                n -= n_steps
+            else:
+                self.simulation.step(n)
+                n = 0
 
-        # Run simulation
-        if isinstance(n, int):
-            self.simulation.step(n)
-        else:
-            self.simulation.step(self._time2steps(n))
-                
+        # Optionally report large forces
+        if reportLargeForceThreshold > 0:
+            state = self.simulation.context.getState(getForces=True)
+            netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
+            indices = np.where(np.isnan(netforces) | (netforces > reportLargeForceThreshold))[0]
+            atoms = list(self.topology.atoms())
+            print("The following atoms experience large net forces exceeding the threshold", reportLargeForceThreshold)
+            [print(f"{atoms[idx]}, net F = {netforces[idx]}") for idx in indices]
+
         # Update positions
         state = self.simulation.context.getState(getPositions=True)
         self.positions = state.getPositions()
@@ -265,7 +369,7 @@ class MDSystem(Modeller):
         
         return self
 
-    def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
+    def equilibrate(self, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True, reportLargeForceThreshold=-1):
         """
         Minimizes and equilibrate an MDSystem object. If position restraints
         are applied, it will taper the restraints over the course of the 
@@ -280,8 +384,12 @@ class MDSystem(Modeller):
             Temperature to use to initialize velocities
         posre : bool
             If True, position restraints have been applied to simulation object
+        reportLargeForceThreshold : int
+            If <= 0, will not report; otherwise, print a list of
+            all atoms with net forces on them exceeding the
+            threshold in magnitude
         """
-        return equilibrate.equilibrate(self, simtime, temperature, posre)
+        return equilibrate.equilibrate(self, simtime, temperature, posre, reportLargeForceThreshold=reportLargeForceThreshold)
 
     def calmdown(self, posre=True):
         """

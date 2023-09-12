@@ -1,0 +1,32 @@
+
+package:
+  name: mdtools
+  version: "0.1.4"
+
+source:
+  path: ..
+
+build:
+  script: python setup.py install
+
+requirements:
+  build: 
+    - python 
+    - numpy
+    - setuptools
+    
+  
+  run: 
+    - python>=3.7
+    - openmm>=7
+    - reciprocalspaceship=1.0.0 
+    - gemmi 
+    - mdtraj
+    - matplotlib
+
+about:
+  home: https://github.com/Hekstra-Lab/mdtools
+  description: 'Tools for running MD simulation in OpenMM'
+
+extra:
+  author: 'Jack B. Greisman, Ziyuan Zhao'

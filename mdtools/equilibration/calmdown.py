@@ -85,7 +85,7 @@ def _identifyProblemPairs(mdsystem):
     state = mdsystem.simulation.context.getState(getPositions=True,
                                                  getForces=True)
     netforces = np.linalg.norm(state.getForces(asNumpy=True), axis=1)
-    indices = np.where(np.isnan(netforces) | (netforces > 3e3))[0]
+    indices = np.where(np.isnan(netforces) | (netforces > 1e3))[0]
 
     # Return list of force overflow atoms that are also < 5A from eachother
     # using periodic distance

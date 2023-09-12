@@ -4,7 +4,7 @@ from simtk.unit import *
 import mdtraj
 from mdtraj.reporters import HDF5Reporter
 
-def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True):
+def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=True, reportLargeForceThreshold=-1):
     """
     Minimizes and equilibrate an MDSystem object. If position restraints
     are applied, it will taper the restraints over the course of the 
@@ -24,6 +24,10 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
         Temperature to use to initialize velocities
     posre : bool
         If True, position restraints have been applied to simulation object
+    reportLargeForceThreshold : int
+            If <= 0, will not report; otherwise, print a list of
+            all atoms with net forces on them exceeding the
+            threshold in magnitude
     """
 
     # Minimize system
@@ -38,8 +42,8 @@ def equilibrate(mdsystem, simtime=1.*nanoseconds, temperature=300*kelvin, posre=
         for i in range(splits):
             k = max((5.0 - (0.25*i)), 0)
             mdsystem.simulation.context.setParameter('k', k*kilocalories_per_mole/angstroms**2)
-            mdsystem.simulate(simtime/splits)
+            mdsystem.simulate(simtime/splits, reportLargeForceThreshold=reportLargeForceThreshold)
     else:
-        mdsystem.simulate(simtime)
+        mdsystem.simulate(simtime, reportLargeForceThreshold=reportLargeForceThreshold)
             
     return mdsystem
