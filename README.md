@@ -10,36 +10,42 @@ For now, this repo is very much targeted to my current use cases, which is cente
 
 # Installation
 
-## Pre-requisites to install via conda
-
-The best course of action is to start off by installing `openmm`, `openmmforcefields`, and `openff-toolkit` via conda.
-
-```shell
-conda install -c omnia -c conda-forge openmm openmmforcefields openff-toolkit
-```
-
-### GPU specific installation
-
-If you plan to use openmm/mdtools with GPU acceleration through CUDA (and you probably do!!) you'll need some extra goodies. As long as you run the above `conda install` command in the same GPU-containing environment that you plan to use for simulations, everything should be installed correctly automagically.
-
-## pip-based installation of mdtools and other dependencies
-
 I have not yet made this package available on PyPI. Until then, `mdtools` can be
-installed via `git+` syntax:
-
-```shell
-pip install git+https://github.com/Hekstra-Lab/mdtools.git
-```
-or, you can clone the repo and install your local copy:
+installed locally by cloning the repository and using the included `setup.py`:
 
 ```
 git clone https://github.com/Hekstra-Lab/mdtools.git
 cd mdtools
-pip install -e .
+python setup.py install
 ```
 
+However, one would need to pre-install the following packages as specified in `conda-recipe/meta.yaml`:
+
+```
+- openmm>=7
+- reciprocalspaceship=1.0.0 
+- gemmi 
+- mdtraj
+- matplotlib
+```
+
+For example, openmm and mdtraj could be installed from conda:
+```
+conda install -c omnia -c conda-forge openmm
+conda install -c conda-forge mdtraj
+```
+
+Alternatively, build the package by yourself and install all the above dependencies automatically with Conda:
+```
+conda create -n NEW_CONDA_ENV_NAME python=DESIRED_PYTHON_VERSION # >=3.7 
+conda activate NEW_CONDA_ENV_NAME
+conda build . --python=DESIRED_PYTHON_VERSION #choose from 3.7, 3.8, 3.9, 3.10, 3.11
+conda install --use-local mdtools
+```
 
 Note: building the package could be very slow in vanilla Conda due to the many dependencies that need to be resolved. Please consider installing [boa](https://github.com/mamba-org/boa) and use `conda mambabuild` for an immense speed-up. Also, use `mamba install` instead of `conda install` for additional speed-up.
+
+The above Conda build and install method has been tested on arm64 OSX and also on FASRC clusters. 
 
 
 # Examples

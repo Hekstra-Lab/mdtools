@@ -8,8 +8,8 @@ __author__  = "Jack Greisman"
 __version__ = "1.1"
 
 from simtk.unit import *
-from openmm import *
-from openmm.app import *
+from simtk.openmm import *
+from simtk.openmm.app import *
 import mdtraj
 from mdtraj.reporters import HDF5Reporter
 import numpy as np
