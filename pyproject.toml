@@ -1,0 +1,68 @@
+# https://peps.python.org/pep-0517/
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+# https://peps.python.org/pep-0621/
+[project]
+name = "mdtools"
+# versioning through releases
+description = "Tools for running MD simulation in OpenMM"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "BSD 3-Clause License" }
+authors = [
+    { email = "greisman@g.harvard.edu", name = "Jack B. Greisman" },
+    { email = "ziyuanzhao@fas.harvard.edu", name = "Ziyuan Zhao" },
+    { email = "debrookner@gmail.com", name = "Dennis Brookner" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+
+dependencies = [
+    "numpy >= 1.6",
+    "reciprocalspaceship>=1.0.0",
+    "gemmi>=0.7.0",
+    "mdtraj",
+    "matplotlib",
+]
+
+# extras
+# https://peps.python.org/pep-0621/#dependencies-optional-dependencies
+[project.optional-dependencies]
+#cuda = ["openmm[cuda12]"]
+#test = ["pytest>=6.0", "pytest-cov"]
+#dev = [
+#    "black",
+#    "ipython",
+#    "mypy",
+#    "pdbpp",
+#    "pre-commit",
+#    "pytest-cov",
+#    "pytest",
+#    "rich",
+#    "ruff",
+#]
+#docs = [
+#    "sphinx",
+#    "myst_parser",
+#    "sphinxcontrib_autoprogram",
+#    "sphinx_rtd_theme"
+#]
+
+[project.urls]
+repository = "https://github.com/Hekstra-Lab/mdtools"
+
+# https://hatch.pypa.io/latest/config/metadata/
+[tool.hatch.version]
+source = "vcs"
+
