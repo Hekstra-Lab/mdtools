@@ -8,8 +8,8 @@ __author__  = "Jack Greisman"
 __version__ = "1.0"
 
 from simtk.unit import *
-from openmm import *
-from openmm.app import *
+from simtk.openmm import *
+from simtk.openmm.app import *
 import mdtraj
 from .mdsystem import MDSystem
 import numpy as np
